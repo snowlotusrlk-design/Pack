@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>แพ็คสินค้า · รวยเหลือกิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{color-scheme:light dark}
+:root{
+  --bg:#F5F2ED; --surface:#FFFFFF; --surface-2:#FBF9F5; --surface-3:#F0ECE4;
+  --ink:#1B222B; --ink-2:#5A6673; --ink-3:#8B95A1;
+  --line:#E2DBD0; --line-2:#EEE9E0;
+  --accent:#C4610A; --accent-ink:#FFFFFF; --accent-soft:#FAEBDC; --accent-line:#E8C9A8;
+  --ok:#0F7A46; --ok-soft:#E3F1E9; --ok-line:#BBDCC8;
+  --warn:#8F6200; --warn-soft:#F9EFD5; --warn-line:#E3CE95;
+  --crit:#AD231C; --crit-soft:#FAE5E3; --crit-line:#EDBEB9;
+  --rail:#1B222B; --rail-2:#2A3440; --rail-ink:#E4E8ED; --rail-ink-2:#8A95A3;
+  --shadow:0 1px 2px rgba(27,34,43,.06), 0 6px 18px -10px rgba(27,34,43,.18);
+  --focus:#C4610A;
+}
+:root:not([data-theme="light"]){ @media (prefers-color-scheme: dark){
+  --bg:#0E1216; --surface:#1A2027; --surface-2:#151B21; --surface-3:#222A33;
+  --ink:#ECE8E1; --ink-2:#A6B1BE; --ink-3:#7A8592;
+  --line:#2C353F; --line-2:#232B34;
+  --accent:#F08A3C; --accent-ink:#1B222B; --accent-soft:#2E2117; --accent-line:#4A341F;
+  --ok:#49B382; --ok-soft:#152720; --ok-line:#26463A;
+  --warn:#D9A521; --warn-soft:#2A2314; --warn-line:#4A3E1E;
+  --crit:#EF8078; --crit-soft:#2E1B19; --crit-line:#4F2B28;
+  --rail:#080B0E; --rail-2:#1C242D; --rail-ink:#E4E8ED; --rail-ink-2:#7F8B99;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -12px rgba(0,0,0,.6);
+  --focus:#F08A3C;
+} }
+:root[data-theme="dark"]{
+  --bg:#0E1216; --surface:#1A2027; --surface-2:#151B21; --surface-3:#222A33;
+  --ink:#ECE8E1; --ink-2:#A6B1BE; --ink-3:#7A8592;
+  --line:#2C353F; --line-2:#232B34;
+  --accent:#F08A3C; --accent-ink:#1B222B; --accent-soft:#2E2117; --accent-line:#4A341F;
+  --ok:#49B382; --ok-soft:#152720; --ok-line:#26463A;
+  --warn:#D9A521; --warn-soft:#2A2314; --warn-line:#4A3E1E;
+  --crit:#EF8078; --crit-soft:#2E1B19; --crit-line:#4F2B28;
+  --rail:#080B0E; --rail-2:#1C242D; --rail-ink:#E4E8ED; --rail-ink-2:#7F8B99;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 20px -12px rgba(0,0,0,.6);
+  --focus:#F08A3C;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans Thai Looped","IBM Plex Sans Thai",-apple-system,"Sukhumvit Set","Noto Sans Thai",sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.disp{font-family:"IBM Plex Sans Thai",-apple-system,"Sukhumvit Set",sans-serif;font-weight:700;letter-spacing:-.01em;margin:0}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── แถบบน ── */
+.top{background:var(--rail);color:var(--rail-ink);position:sticky;top:0;z-index:30}
+.topin{display:flex;align-items:center;gap:12px;padding:10px 20px;max-width:1280px;margin:0 auto;flex-wrap:wrap}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;flex:none}
+.brand b{display:block;font-size:15px;font-family:"IBM Plex Sans Thai",sans-serif}
+.brand span{display:block;font-size:11.5px;color:var(--rail-ink-2)}
+.tabs{display:flex;gap:4px;margin-left:12px}
+.tabs button{background:none;border:0;color:var(--rail-ink);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:14.5px;white-space:nowrap}
+.tabs button:hover{background:var(--rail-2)}
+.tabs button[aria-current="page"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.who{margin-left:auto;display:flex;gap:8px;align-items:center}
+.who select{background:var(--rail-2);border:1px solid #3A4552;color:var(--rail-ink);border-radius:8px;padding:6px 10px;font-size:14px}
+.who select.need{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.icobtn{background:var(--rail-2);border:0;color:var(--rail-ink);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px;text-decoration:none;white-space:nowrap}
+.icobtn:hover{filter:brightness(1.2)}
+@media(max-width:760px){
+  .topin{padding:10px 16px;gap:8px}
+  .tabs{order:3;margin-left:0;width:100%;overflow-x:auto}
+  .brand span{display:none}
+  .backlink{display:none}
+}
+
+.wrap{max-width:1280px;margin:0 auto;padding:20px 20px 72px}
+@media(max-width:760px){.wrap{padding:14px 16px 64px}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);min-width:0}
+.card>.hd{padding:14px 16px 0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card>.bd{padding:16px}
+.hd h2{font-size:16px}
+.hd p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.muted{color:var(--ink-2)}
+.small{font-size:12.5px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--surface-3)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.okb{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.btn.danger{color:var(--crit);border-color:var(--crit-line)}
+.btn.danger:hover{background:var(--crit-soft)}
+.btn.big{padding:13px 20px;font-size:16.5px;border-radius:11px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ── หน้าแพ็ค ── */
+.packgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:980px){.packgrid{grid-template-columns:minmax(0,1fr)}}
+
+.steps{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:99px;background:var(--surface-3);color:var(--ink-3);font-size:13.5px;font-weight:500}
+.step i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:var(--ink-2);font-size:12.5px;font-weight:700}
+.step.on{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent-line)}
+.step.on i{background:var(--accent);color:#fff}
+.step.done{color:var(--ok)}
+.step.done i{background:var(--ok);color:#fff}
+
+.scanbox{display:flex;gap:10px}
+.scanbox input{flex:1;min-width:0;font-family:"IBM Plex Mono",monospace;font-size:24px;padding:14px 16px;border:2px solid var(--accent-line);border-radius:12px;background:var(--surface);letter-spacing:.03em}
+.scanbox input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.scanbox .btn{font-size:22px;padding:0 18px}
+@media(max-width:760px){.scanbox input{font-size:18px;padding:12px}}
+.scanhint{font-size:13px;color:var(--ink-2);margin-top:8px;display:flex;gap:6px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.dot.off{background:var(--ink-3)}
+
+.flash{margin-top:14px;padding:14px 16px;border-radius:12px;font-size:17px;font-weight:600;display:flex;gap:12px;align-items:center;font-family:"IBM Plex Sans Thai",sans-serif;border:1.5px solid transparent}
+.flash .ic{font-size:26px;line-height:1}
+.flash small{display:block;font-weight:400;font-size:13.5px;font-family:"IBM Plex Sans Thai Looped",sans-serif;opacity:.9}
+.flash.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line)}
+.flash.err{background:var(--crit-soft);color:var(--crit);border-color:var(--crit-line)}
+.flash.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.flash.info{background:var(--surface-3);color:var(--ink-2)}
+.flash.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.97)}50%{transform:scale(1.015)}100%{transform:scale(1)}}
+
+.boxhead{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--line-2);flex-wrap:wrap}
+.boxhead .lbl{font-size:12px;color:var(--ink-3);letter-spacing:.06em}
+.boxhead .trk{font-family:"IBM Plex Mono",monospace;font-size:24px;font-weight:600;letter-spacing:.02em;word-break:break-all}
+.boxhead .cnt{margin-left:auto;text-align:right}
+.boxhead .cnt b{font-family:"IBM Plex Mono",monospace;font-size:30px;line-height:1}
+.empty{padding:34px 16px;text-align:center;color:var(--ink-3)}
+.empty .big{font-size:44px;line-height:1;margin-bottom:8px}
+
+.lines{list-style:none;margin:0;padding:0}
+.line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line-2)}
+.line:last-child{border-bottom:0}
+.line.flashrow{animation:rowflash .9s ease}
+@keyframes rowflash{0%{background:var(--ok-soft)}100%{background:transparent}}
+.line .nm{font-weight:600;font-size:15.5px}
+.line .meta{font-size:12.5px;color:var(--ink-2)}
+.line .meta .low{color:var(--crit);font-weight:600}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:20px;cursor:pointer;line-height:1}
+.qty button:hover{background:var(--surface-3)}
+.qty b{min-width:44px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:24px}
+.boxfoot{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line-2);background:var(--surface-2);border-radius:0 0 12px 12px;flex-wrap:wrap}
+.boxfoot .btn.okb{flex:1}
+
+.search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:15px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.plist{max-height:520px;overflow-y:auto;border:1px solid var(--line-2);border-radius:10px}
+.pitem{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid var(--line-2);background:none;cursor:pointer}
+.pitem:last-child{border-bottom:0}
+.pitem:hover{background:var(--accent-soft)}
+.pitem .nm{flex:1;min-width:0}
+.pitem .nm b{font-weight:500;display:block}
+.pitem .sku{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
+.pitem .st{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.pitem .st.low{color:var(--crit)}
+.pitem .plus{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;flex:none}
+.barcode-tag{font-size:10.5px;padding:1px 6px;border-radius:5px;background:var(--ok-soft);color:var(--ok);margin-left:4px;font-family:"IBM Plex Sans Thai",sans-serif;vertical-align:1px}
+
+/* ── กล้องวิดีโอ ── */
+.vidhd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.switch{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;margin-left:auto}
+.switch input{appearance:none;width:42px;height:24px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked{background:var(--ok)}
+.switch input:checked::after{left:21px}
+#vidcanvas{width:100%;aspect-ratio:16/9;background:#0E1216;border-radius:10px;display:block}
+.vidbar{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px}
+.vidbar select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);max-width:100%;font-size:13px}
+.rec{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--crit)}
+.rec::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--crit);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.upq{font-size:12.5px;color:var(--ink-2)}
+.side{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);min-width:0}
+
+/* ── สรุปวันนี้ ── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 15px;box-shadow:var(--shadow)}
+.tile .k{font-size:12.5px;color:var(--ink-2);display:block;margin-bottom:4px}
+.tile .v{font-size:28px;font-weight:600;font-family:"IBM Plex Mono",monospace;line-height:1.15}
+.tile .u{font-size:12.5px;color:var(--ink-3);margin-left:3px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;align-items:start}
+@media(max-width:980px){.two{grid-template-columns:minmax(0,1fr)}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line-2);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);padding:9px 12px;background:var(--surface-2);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+.r{text-align:right}
+td.mono{font-size:13.5px}
+tr.void td{color:var(--ink-3);text-decoration:line-through}
+tr.void td.keep{text-decoration:none}
+.pill{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:99px;background:var(--surface-3);color:var(--ink-2)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input[type=date],.toolbar input[type=search]{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+
+/* ── บาร์โค้ด ── */
+.qtyin{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);text-align:right;font-family:"IBM Plex Mono",monospace}
+
+/* ── กล่องลอย ── */
+.modal{position:fixed;inset:0;background:rgba(14,18,22,.55);display:grid;place-items:center;z-index:60;padding:16px}
+.dlg{background:var(--surface);border-radius:14px;width:min(560px,100%);max-height:90dvh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dlg .hd{padding:18px 18px 8px}
+.dlg .hd h3{font-size:18px}
+.dlg .bd{padding:8px 18px 12px;overflow-y:auto}
+.dlg .ft{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px 18px;flex-wrap:wrap}
+.code{font-family:"IBM Plex Mono",monospace;background:var(--surface-3);padding:2px 8px;border-radius:6px;word-break:break-all}
+#cam{width:100%;border-radius:10px;overflow:hidden;background:#000;min-height:220px}
+#cam video{width:100%!important;display:block}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:14px;z-index:80;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.demo{background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--warn-line);text-align:center;font-size:13px;padding:6px 16px}
+
+/* ── สติกเกอร์ (พิมพ์) ── */
+#sheet{display:none}
+@media print{
+  @page{size:A4;margin:8mm 6mm}
+  body{background:#fff}
+  .top,.wrap,.modal,.toast,.demo{display:none!important}
+  #sheet{display:grid!important;grid-template-columns:repeat(3,1fr);gap:0;color:#000}
+  .stk{height:35mm;padding:2.5mm 3mm;border:.2mm dashed #bbb;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;break-inside:avoid;font-family:"IBM Plex Sans Thai",sans-serif}
+  .stk .n{font-size:9pt;font-weight:600;text-align:center;line-height:1.2;max-height:2.4em;overflow:hidden}
+  .stk svg{width:100%;height:17mm}
+}
+</style>
+</head>
+<body>
+<div class="demo" id="demo" hidden>โหมดทดลอง — ใช้ข้อมูลตัวอย่าง ไม่มีอะไรถูกบันทึกจริง</div>
+
+<header class="top">
+  <div class="topin">
+    <div class="mark">รล</div>
+    <div class="brand"><b>แพ็คสินค้า</b><span>ยิงใบปะหน้า · ยิงสินค้า · ปิดกล่อง</span></div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="pack" aria-current="page">แพ็ค</button>
+      <button data-tab="today">สรุปที่แพ็ค</button>
+      <button data-tab="codes">บาร์โค้ดสินค้า</button>
+    </nav>
+    <div class="who">
+      <select id="who" aria-label="ชื่อผู้แพ็ค"><option value="">— เลือกชื่อผู้แพ็ค —</option></select>
+      <button class="icobtn" id="reload" title="โหลดข้อมูลล่าสุด">↻</button>
+      <a class="icobtn backlink" id="back" href="#">คลังสต๊อก →</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ═══ แพ็ค ═══ -->
+  <section id="v-pack">
+    <div class="packgrid">
+      <div>
+        <div class="card"><div class="bd">
+          <div class="steps" id="steps">
+            <div class="step" data-s="1"><i>1</i>ยิงใบปะหน้า</div>
+            <div class="step" data-s="2"><i>2</i>ยิงสินค้าลงกล่อง</div>
+            <div class="step" data-s="3"><i>3</i>ยิงใบปะหน้าซ้ำ = ปิดกล่อง</div>
+          </div>
+          <form class="scanbox" id="scanform" autocomplete="off">
+            <input id="scan" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ยิงบาร์โค้ดใบปะหน้า">
+            <button type="button" class="btn" id="cambtn" title="สแกนด้วยกล้องมือถือ">📷</button>
+          </form>
+          <div class="scanhint"><span class="dot" id="focusdot"></span><span id="focustxt">พร้อมรับการยิง</span></div>
+          <div id="flash"></div>
+        </div></div>
+
+        <div class="card" style="margin-top:16px" id="boxcard"></div>
+      </div>
+
+      <div class="side">
+      <div class="card" id="vidcard">
+        <div class="hd vidhd"><h2>กล้องบันทึกการแพ็ค</h2>
+          <label class="switch"><input type="checkbox" id="vidon"> <span id="vidonlbl">ปิดอยู่</span></label></div>
+        <div class="bd">
+          <div id="vidoff" class="small muted">เปิดสวิตช์เพื่ออัดวิดีโอทุกกล่องอัตโนมัติ — เริ่มอัดเมื่อยิงใบปะหน้า หยุดเมื่อปิดกล่อง แล้วเก็บขึ้น Google Drive ตั้งชื่อตามเลขพัสดุ ใช้ตรวจย้อนหลังเวลาลูกค้าแจ้งว่าได้ของผิด/ขาด</div>
+          <div id="vidwrap" hidden>
+            <canvas id="vidcanvas" width="640" height="360"></canvas>
+            <div class="vidbar">
+              <span id="vidstate" class="muted">พร้อมอัด</span>
+              <span style="margin-left:auto"></span>
+              <select id="viddev" aria-label="เลือกกล้อง"></select>
+            </div>
+          </div>
+          <div class="upq" id="upq"></div>
+        </div>
+      </div>
+      <div class="card" id="pickcard">
+        <div class="hd"><h2>เพิ่มสินค้าที่ไม่มีบาร์โค้ด</h2><p>แตะเพื่อใส่ลงกล่อง 1 ชิ้น</p></div>
+        <div class="bd">
+          <input class="search" id="psearch" type="search" placeholder="ค้นชื่อหรือรหัสสินค้า">
+          <div class="chips" id="pbrands"></div>
+          <div class="plist" id="plist"></div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ สรุป ═══ -->
+  <section id="v-today" hidden>
+    <div class="toolbar">
+      <input type="date" id="tdate">
+      <input type="search" id="tsearch" placeholder="ค้นเลขพัสดุ" style="flex:1;min-width:180px">
+    </div>
+    <div class="tiles" id="ttiles"></div>
+    <div class="two">
+      <div class="card">
+        <div class="hd"><h2>ยอดตัดสต๊อกรายสินค้า</h2><p>เฉพาะกล่องที่ปิดแล้ว</p></div>
+        <div class="bd"><div class="tablewrap" id="tsku"></div></div>
+      </div>
+      <div class="card">
+        <div class="hd"><h2>รายการกล่อง</h2><p>ยกเลิกกล่อง = ลบรายการขายของกล่องนั้น สต๊อกกลับเท่าเดิม · 🎬 = เปิดวิดีโอการแพ็คใน Google Drive</p></div>
+        <div class="bd"><div class="tablewrap" id="tbox"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ บาร์โค้ด ═══ -->
+  <section id="v-codes" hidden>
+    <div class="two">
+      <div class="card">
+        <div class="hd"><h2>บาร์โค้ดที่ผูกไว้แล้ว</h2><p>ยิงบาร์โค้ดที่ระบบไม่รู้จักตอนแพ็ค ระบบจะให้เลือกสินค้าแล้วจำไว้เอง</p></div>
+        <div class="bd">
+          <form class="scanbox" id="linkform" style="margin-bottom:12px">
+            <input id="linkscan" placeholder="ยิงบาร์โค้ดเพื่อผูกใหม่" style="font-size:18px;padding:10px 12px" autocomplete="off">
+            <button class="btn pri" style="font-size:15px">ผูก</button>
+          </form>
+          <div class="tablewrap" id="codelist"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd"><h2>พิมพ์สติกเกอร์บาร์โค้ด</h2><p>สำหรับสินค้าที่ไม่มีบาร์โค้ด — กระดาษ A4 สติกเกอร์ 3×8 (24 ดวง) ใช้รหัส SKU ยิงได้ทันทีไม่ต้องผูก</p></div>
+        <div class="bd">
+          <div class="toolbar" style="margin-bottom:8px">
+            <input type="search" id="ssearch" placeholder="ค้นสินค้า" class="search" style="flex:1;min-width:160px">
+            <label class="small"><input type="checkbox" id="snocode" checked> เฉพาะตัวที่ยังไม่มีบาร์โค้ด</label>
+          </div>
+          <div class="tablewrap" style="max-height:440px;overflow-y:auto" id="stklist"></div>
+          <div class="toolbar" style="margin:12px 0 0">
+            <span class="small muted" id="stkcount">ยังไม่ได้เลือก</span>
+            <span style="margin-left:auto"></span>
+            <button class="btn" id="stkclear">ล้าง</button>
+            <button class="btn pri" id="stkprint">🖨 พิมพ์สติกเกอร์</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="modal"></div>
+<div id="sheet"></div>
+
+<script>
+/* หน้านี้อยู่บน GitHub Pages — ข้อมูลวิ่งผ่าน API (Apps Script โปรเจกต์ "API หน้าแพ็ค") ไปที่ชีทสต๊อก
+   เปิดผ่าน Apps Script ตรงๆ ไม่ได้เพราะ Google ไม่ให้ใช้กล้องในหน้านั้น */
+const API_URL = 'https://script.google.com/macros/s/AKfycbziqhM0ri9k2s8vqo6lHCOBf5HopHdiBhaBrt-bcw4ZA-tTXTJnQGfSTo4IqXmTKQ0tAg/exec';
+const BASE_URL = 'https://script.google.com/macros/s/AKfycbwBgCiU4cXm7x0nUs-ctPCPKOhFx6pFL3o3Pvzsqc7rRUNPrnYC_jAMVgyTmPh2YPqX/exec';
+const QS = new URLSearchParams(location.search);
+const START_USER = QS.get('u') || '';
+const DEMO = QS.get('demo') === '1';
+
+/* รหัสเข้าใช้มากับลิงก์แบบ #k=… ครั้งแรก แล้วจำไว้ในเครื่อง ลบออกจากแถบที่อยู่ทันทีกันคนแอบเห็น */
+let API_KEY = '';
+(function(){
+  const m = location.hash.match(/k=([A-Za-z0-9]+)/);
+  try{
+    if(m){ localStorage.setItem('rlk_pack_key', m[1]); history.replaceState(null, '', location.pathname + location.search); }
+    API_KEY = (m && m[1]) || localStorage.getItem('rlk_pack_key') || '';
+  }catch(e){ API_KEY = m ? m[1] : ''; }
+})();
+
+const S = {
+  products: [], bySku: {}, barcodes: {}, packs: [], people: [], today: '',
+  who: '', tab: 'pack', brand: '', loaded: false,
+  cur: null,            // กล่องที่กำลังแพ็ค {tracking, items:{sku:qty}, order:[sku], openedAt}
+  busy: false, stk: {}, lastHit: ''
+};
+
+/* ═══ เครื่องมือ ══════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number(n || 0).toLocaleString('th-TH');
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k, v){ try{ v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); }catch(e){} }
+};
+
+function call(fn){
+  const args = Array.prototype.slice.call(arguments, 1);
+  if(DEMO) return Promise.resolve(demoApi(fn, args));
+  if(!API_KEY) return Promise.reject(new Error('ยังไม่มีรหัสเข้าใช้ — เปิดจากลิงก์ที่หัวหน้าส่งให้'));
+  return fetch(API_URL, { method: 'POST', body: JSON.stringify({ k: API_KEY, fn: fn, args: args }) })
+    .then(r => { if(!r.ok) throw new Error('เชื่อมต่อไม่ได้ (' + r.status + ')'); return r.json(); })
+    .then(r => {
+      if(r && r.__error){
+        if(/รหัสเข้าใช้/.test(r.__error)){ API_KEY = ''; store.set('rlk_pack_key', null); }
+        throw new Error(r.__error);
+      }
+      return r;
+    });
+}
+
+let toastT;
+function toast(msg, ms){
+  let t = document.querySelector('.toast');
+  if(!t){ t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true; }, ms || 2600);
+}
+
+/* เสียง — ให้คนแพ็คไม่ต้องมองจอทุกครั้ง */
+let actx;
+function tone(freq, dur, at, type){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    const t0 = actx.currentTime + (at || 0);
+    g.gain.setValueAtTime(.0001, t0);
+    g.gain.exponentialRampToValueAtTime(.25, t0 + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur + .02);
+  }catch(e){}
+}
+const beep = {
+  ok(){ tone(1320, .09); },
+  open(){ tone(880, .09); tone(1320, .12, .1); },
+  done(){ tone(988, .1); tone(1319, .1, .11); tone(1760, .2, .22); },
+  err(){ tone(220, .18, 0, 'square'); tone(180, .28, .2, 'square'); }
+};
+
+/* เครื่องยิงบาร์โค้ดพิมพ์ตามแป้นพิมพ์ ถ้าเครื่องค้างภาษาไทยไว้ ตัวอักษรจะกลายเป็นภาษาไทย
+   ตารางนี้แปลงกลับเป็นปุ่มภาษาอังกฤษตามแป้นเกษมณี */
+const TH_KEYS = {
+  'ๅ':'1','/':'2','-':'3','ภ':'4','ถ':'5','ุ':'6','ึ':'7','ค':'8','ต':'9','จ':'0','ข':'-','ช':'=',
+  'ๆ':'q','ไ':'w','ำ':'e','พ':'r','ะ':'t','ั':'y','ี':'u','ร':'i','น':'o','ย':'p','บ':'[','ล':']','ฃ':'\\',
+  'ฟ':'a','ห':'s','ก':'d','ด':'f','เ':'g','้':'h','่':'j','า':'k','ส':'l','ว':';','ง':"'",
+  'ผ':'z','ป':'x','แ':'c','อ':'v','ิ':'b','ื':'n','ท':'m','ม':',','ใ':'.','ฝ':'/',
+  '+':'!','๑':'@','๒':'#','๓':'$','๔':'%','ู':'^','฿':'&','๕':'*','๖':'(','๗':')','๘':'_','๙':'+',
+  '๐':'Q','"':'W','ฎ':'E','ฑ':'R','ธ':'T','ํ':'Y','๊':'U','ณ':'I','ฯ':'O','ญ':'P','ฐ':'{','ฅ':'|',
+  'ฤ':'A','ฆ':'S','ฏ':'D','โ':'F','ฌ':'G','็':'H','๋':'J','ษ':'K','ศ':'L','ซ':':',
+  '(':'Z',')':'X','ฉ':'C','ฮ':'V','ฺ':'B','์':'N','?':'M','ฒ':'<','ฬ':'>','ฦ':'?'
+};
+function fixScan(raw){
+  let s = String(raw || '').trim();
+  if(/[฀-๿]/.test(s)) s = Array.from(s).map(c => TH_KEYS[c] != null ? TH_KEYS[c] : c).join('');
+  return s.replace(/\s+/g, '').toUpperCase();
+}
+
+/* EAN-13 / EAN-8 ที่ checksum ถูก = น่าจะเป็นบาร์โค้ดสินค้า ไม่ใช่ใบปะหน้า */
+function looksLikeEan(c){
+  if(!/^(\d{8}|\d{13})$/.test(c)) return false;
+  const d = c.split('').map(Number), chk = d.pop();
+  let sum = 0;
+  d.reverse().forEach((n, i) => { sum += n * (i % 2 === 0 ? 3 : 1); });
+  return (10 - sum % 10) % 10 === chk;
+}
+
+function skuOf(code){
+  if(S.barcodes[code]) return S.barcodes[code];
+  if(S.bySku[code]) return code;
+  return null;
+}
+function inBox(sku){ return S.cur && S.cur.items[sku] || 0; }
+function left(sku){ const p = S.bySku[sku]; return (p ? p.qty : 0) - inBox(sku); }
+function pieces(){ return S.cur ? Object.values(S.cur.items).reduce((a, b) => a + b, 0) : 0; }
+
+/* ═══ โหลดข้อมูล ══════════════════════════════════════ */
+function load(quiet){
+  if(!quiet) setFlash('info', '⏳', 'กำลังโหลดข้อมูลสินค้า…');
+  return call('apiPackLoad').then(d => {
+    S.products = d.products.sort((a, b) => a.seq - b.seq);
+    S.bySku = {}; S.products.forEach(p => { S.bySku[p.sku.toUpperCase()] = p; });
+    S.barcodes = d.barcodes || {};
+    S.packs = d.packs || [];
+    S.people = d.people || [];
+    S.today = d.today;
+    S.loaded = true;
+    fillPeople();
+    if(!$('tdate').value) $('tdate').value = S.today;
+    if(!quiet) setFlash('', '', '');
+    render();
+  }).catch(e => {
+    setFlash('err', '⚠️', 'โหลดข้อมูลไม่สำเร็จ', (e && e.message) || 'กด ↻ เพื่อลองใหม่');
+  });
+}
+
+function fillPeople(){
+  const sel = $('who');
+  const keep = S.who;
+  sel.innerHTML = '<option value="">— เลือกชื่อผู้แพ็ค —</option>' +
+    S.people.map(p => `<option${p === keep ? ' selected' : ''}>${esc(p)}</option>`).join('');
+  if(keep && S.people.indexOf(keep) < 0) sel.insertAdjacentHTML('beforeend', `<option selected>${esc(keep)}</option>`);
+  sel.classList.toggle('need', !S.who);
+}
+
+/* ═══ การยิง ══════════════════════════════════════════ */
+function onScan(raw){
+  const code = fixScan(raw);
+  if(!code) return;
+  if(!S.loaded){ setFlash('warn', '⏳', 'รอโหลดข้อมูลสักครู่'); beep.err(); return; }
+  if(!S.who){ setFlash('err', '👤', 'เลือกชื่อผู้แพ็คที่มุมขวาบนก่อน'); beep.err(); $('who').focus(); return; }
+  if(S.busy) return;
+
+  if(!S.cur){                                      // ── ขั้น 1: ยังไม่มีกล่อง
+    const sku = skuOf(code);
+    if(sku){
+      setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน', `${S.bySku[sku].name} เป็นบาร์โค้ดสินค้า — ยิงบาร์โค้ดบนใบปะหน้าเพื่อเปิดกล่องก่อน`);
+      return beep.err();
+    }
+    if(code.length < 8){
+      setFlash('err', '❓', 'รหัสสั้นเกินกว่าจะเป็นเลขพัสดุ', `ได้รับ ${code}`);
+      return beep.err();
+    }
+    const done = closedPack(code);
+    if(done){
+      setFlash('err', '⛔', 'ใบปะหน้านี้แพ็คไปแล้ว — ห้ามแพ็คซ้ำ',
+        `${code} · ปิดกล่องเมื่อ ${thaiTime(done.closedAt)} โดย ${done.by} · ${done.pieces} ชิ้น`);
+      return beep.err();
+    }
+    if(looksLikeEan(code)){
+      return confirmBox('รหัสนี้หน้าตาเหมือนบาร์โค้ดสินค้า',
+        `<p><span class="code">${esc(code)}</span></p><p>ถ้าเป็นบาร์โค้ดบนตัวสินค้า ให้ยิงใบปะหน้าก่อน แล้วค่อยยิงสินค้านี้ — ระบบจะให้ผูกกับสินค้าตอนนั้น</p>`,
+        'เป็นใบปะหน้า เปิดกล่อง', () => openBox(code), 'ไม่ใช่');
+    }
+    return openBox(code);
+  }
+
+  if(code === S.cur.tracking) return closeBox(false);   // ── ขั้น 3: ยิงใบปะหน้าซ้ำ
+
+  const sku = skuOf(code);                         // ── ขั้น 2: ยิงสินค้า
+  if(sku) return addItem(sku, 1, true);
+
+  if(closedPack(code)){
+    setFlash('err', '⛔', 'นี่คือใบปะหน้าของกล่องอื่น', `${code} ปิดกล่องไปแล้ว · กล่องที่เปิดอยู่คือ ${S.cur.tracking}`);
+    return beep.err();
+  }
+  beep.err();
+  unknownCode(code);
+}
+
+function closedPack(code){
+  return S.packs.find(p => p.tracking === code && p.status === 'ปิดกล่อง');
+}
+
+function openBox(code){
+  S.cur = { tracking: code, items: {}, order: [], openedAt: Date.now() };
+  saveCur(); beep.open();
+  vidStart(code);
+  setFlash('ok', '📦', 'เปิดกล่องแล้ว — ยิงสินค้าที่จะใส่ได้เลย', code);
+  render();
+}
+
+function addItem(sku, n, scanned){
+  if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน'); return beep.err(); }
+  const p = S.bySku[sku];
+  const q = Math.max(0, inBox(sku) + n);
+  if(q === 0){ delete S.cur.items[sku]; S.cur.order = S.cur.order.filter(s => s !== sku); }
+  else{
+    if(!S.cur.items[sku]) S.cur.order.push(sku);
+    S.cur.items[sku] = q;
+  }
+  saveCur();
+  if(n > 0){
+    S.lastHit = sku;
+    const l = left(sku);
+    if(l < 0){
+      setFlash('warn', '⚠️', `${p.name} × ${q}`, `สต๊อกในระบบไม่พอ (เหลือ ${fmt(p.qty)}) — ยังแพ็คได้ แต่ควรแจ้งคนนับสต๊อก`);
+      beep.err();
+    }else{
+      setFlash('ok', scanned ? '✓' : '＋', `${p.name} × ${q}`, `ในกล่อง ${pieces()} ชิ้น · คงเหลือหลังแพ็ค ${fmt(l)}`);
+      beep.ok();
+    }
+  }
+  render();
+}
+
+function closeBox(fromButton){
+  if(!S.cur) return;
+  const n = pieces();
+  if(!n){
+    setFlash('err', '📭', 'กล่องยังว่าง ปิดไม่ได้', 'ยิงสินค้าลงกล่องก่อน หรือกด "ยกเลิกกล่องนี้" ถ้าเปิดผิดใบ');
+    return beep.err();
+  }
+  const go = () => {
+    const cur = S.cur;
+    const items = cur.order.map(sku => ({ sku: S.bySku[sku].sku, qty: cur.items[sku] }));
+    S.busy = true; render();
+    setFlash('info', '⏳', 'กำลังปิดกล่องและตัดสต๊อก…', cur.tracking);
+    call('apiClosePack', cur.tracking, items, S.who, '').then(r => {
+      S.busy = false;
+      if(!r.ok){
+        if(r.dup && r.pack) S.packs.push(r.pack);
+        setFlash('err', '⛔', r.error, r.pack ? `ปิดเมื่อ ${thaiTime(r.pack.closedAt)} โดย ${r.pack.by}` : '');
+        beep.err(); render(); return;
+      }
+      items.forEach(it => { S.bySku[it.sku.toUpperCase()].qty -= it.qty; });
+      S.packs.push(r.pack);
+      vidStop().then(blob => { if(blob) queueVideo(r.pack, blob); });
+      S.cur = null; saveCur();
+      beep.done();
+      setFlash('ok', '✅', `ปิดกล่องแล้ว ${n} ชิ้น · ตัดสต๊อกเรียบร้อย`, `${r.pack.tracking} — ยิงใบปะหน้าใบถัดไปได้เลย`);
+      render();
+    }).catch(e => {
+      S.busy = false;
+      setFlash('err', '⚠️', 'ปิดกล่องไม่สำเร็จ — ของในกล่องยังอยู่ ลองยิงปิดอีกครั้ง', (e && e.message) || '');
+      beep.err(); render();
+    });
+  };
+  if(!fromButton) return go();
+  confirmBox('ปิดกล่องและตัดสต๊อก?',
+    `<p><span class="code">${esc(S.cur.tracking)}</span> · ${n} ชิ้น</p><ul>` +
+    S.cur.order.map(s => `<li>${esc(S.bySku[s].name)} × <b>${S.cur.items[s]}</b></li>`).join('') +
+    `</ul><p class="small muted">ครั้งหน้ายิงใบปะหน้าซ้ำแทนการกดปุ่มได้ เร็วกว่า</p>`,
+    'ปิดกล่อง', go);
+}
+
+function cancelBox(){
+  if(!S.cur) return;
+  confirmBox('ยกเลิกกล่องนี้?', `<p>ล้างของในกล่อง <span class="code">${esc(S.cur.tracking)}</span> ทิ้ง ยังไม่มีการตัดสต๊อก</p>`,
+    'ยกเลิกกล่อง', () => {
+      S.cur = null; saveCur(); vidDiscard();
+      setFlash('info', '↩', 'ยกเลิกกล่องแล้ว', 'ยิงใบปะหน้าใบใหม่ได้เลย');
+      render();
+    }, 'กลับไปแพ็คต่อ', true);
+}
+
+function saveCur(){ store.set('rlk_pack_cur', S.cur ? JSON.stringify(S.cur) : null); }
+
+/* บาร์โค้ดที่ไม่รู้จัก → เลือกสินค้าแล้วจำไว้ */
+function unknownCode(code, forLinkOnly){
+  setFlash('warn', '❓', 'ไม่รู้จักบาร์โค้ดนี้', `${code} — เลือกว่าเป็นสินค้าตัวไหน ระบบจะจำไว้ครั้งต่อไป`);
+  openModal(`<div class="dlg">
+    <div class="hd"><h3>บาร์โค้ดนี้คือสินค้าอะไร?</h3>
+      <p class="small muted" style="margin:6px 0 0"><span class="code">${esc(code)}</span>
+      ${!forLinkOnly && S.cur ? `<br>ถ้านี่เป็นใบปะหน้าอีกใบ แปลว่ายิงผิด — กล่องที่เปิดอยู่คือ <b>${esc(S.cur.tracking)}</b>` : ''}</p></div>
+    <div class="bd">
+      <input class="search" id="lk-q" type="search" placeholder="ค้นชื่อหรือรหัสสินค้า">
+      <div class="plist" id="lk-list" style="margin-top:10px;max-height:46dvh"></div>
+    </div>
+    <div class="ft"><button class="btn" data-close>ยกเลิก</button></div>
+  </div>`);
+  const draw = () => {
+    $('lk-list').innerHTML = productRows(filterProducts($('lk-q').value, ''), 'link');
+  };
+  $('lk-q').addEventListener('input', draw);
+  $('lk-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-sku]'); if(!b) return;
+    const sku = b.dataset.sku;
+    S.barcodes[code] = sku;
+    closeModal();
+    call('apiLinkBarcode', code, sku, S.who).then(r => {
+      if(!r.ok) toast('จำบาร์โค้ดไม่สำเร็จ — ' + r.error, 4000);
+      else toast(`จำแล้ว: ${code} = ${S.bySku[sku.toUpperCase()].name}`);
+    }).catch(() => toast('จำบาร์โค้ดไม่สำเร็จ ลองใหม่ภายหลัง', 4000));
+    if(!forLinkOnly && S.cur) addItem(sku.toUpperCase(), 1, true); else render();
+  });
+  draw();
+  setTimeout(() => { if($('lk-q')) $('lk-q').focus(); }, 30);
+}
+
+/* ═══ กล้องมือถือ ════════════════════════════════════ */
+let cam = null, camLast = '', camLastT = 0;
+function openCamera(){
+  if(!window.Html5Qrcode){ toast('โหลดตัวสแกนกล้องไม่สำเร็จ ตรวจอินเทอร์เน็ต'); return; }
+  openModal(`<div class="dlg">
+    <div class="hd"><h3>สแกนด้วยกล้อง</h3><p class="small muted" style="margin:6px 0 0">หันกล้องไปที่บาร์โค้ด ยิงติดต่อกันได้ ไม่ต้องปิดหน้าต่าง</p></div>
+    <div class="bd"><div id="cam"></div><div id="camflash"></div>
+      <div id="camfall" hidden style="margin-top:12px">
+        <p class="small">เบราว์เซอร์นี้เปิดกล้องสดไม่ได้ ใช้วิธีถ่ายรูปบาร์โค้ดแทน:</p>
+        <label class="btn pri big" style="width:100%">📸 ถ่ายรูปบาร์โค้ด<input type="file" accept="image/*" capture="environment" id="camfile" hidden></label>
+      </div>
+    </div>
+    <div class="ft"><button class="btn" data-close>ปิดกล้อง</button></div>
+  </div>`, stopCamera);
+  const fmts = window.Html5QrcodeSupportedFormats ? [
+    'CODE_128','CODE_39','CODE_93','EAN_13','EAN_8','UPC_A','UPC_E','ITF','CODABAR','QR_CODE','DATA_MATRIX'
+  ].map(k => Html5QrcodeSupportedFormats[k]).filter(v => v != null) : undefined;
+  const cfg = { formatsToSupport: fmts, verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+  const camScanned = text => {
+    const now = Date.now();
+    if(text === camLast && now - camLastT < 1800) return;   // กันกล้องอ่านใบเดิมซ้ำรัวๆ
+    camLast = text; camLastT = now;
+    onScan(text);
+    const f = $('flash').firstElementChild;
+    if($('camflash') && f) $('camflash').innerHTML = f.outerHTML;
+  };
+  $('camfile').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0]; if(!file) return;
+    const reader = new Html5Qrcode('cam', cfg);
+    reader.scanFile(file, false).then(camScanned).catch(() => {
+      $('camflash').innerHTML = '<div class="flash err"><span class="ic">✗</span><div>อ่านบาร์โค้ดในรูปไม่ได้<small>ถ่ายใหม่ให้ใกล้และชัดขึ้น ให้บาร์โค้ดเต็มกรอบแนวนอน</small></div></div>';
+      beep.err();
+    }).finally(() => { e.target.value = ''; });
+  });
+  try{
+    cam = new Html5Qrcode('cam', cfg);
+    cam.start({ facingMode: 'environment' }, { fps: 12, qrbox: (w, h) => ({ width: Math.min(w * .9, 420), height: Math.min(h * .5, 170) }) },
+      camScanned, () => {})
+      .catch(() => { cam = null; $('camfall').hidden = false; $('cam').hidden = true; });
+  }catch(e){ cam = null; $('camfall').hidden = false; $('cam').hidden = true; }
+}
+function stopCamera(){
+  if(cam){ const c = cam; cam = null; c.stop().catch(()=>{}).finally(() => { try{ c.clear(); }catch(e){} }); }
+}
+
+/* ═══ กล่องลอย ═══════════════════════════════════════ */
+let onModalClose = null;
+function openModal(html, onClose){
+  $('modal').innerHTML = `<div class="modal">${html}</div>`;
+  onModalClose = onClose || null;
+  $('modal').querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModal));
+  $('modal').firstElementChild.addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+}
+function closeModal(){
+  if(onModalClose){ const f = onModalClose; onModalClose = null; f(); }
+  $('modal').innerHTML = '';
+  focusScan();
+}
+function modalOpen(){ return !!$('modal').firstElementChild; }
+function confirmBox(title, body, okText, onOk, cancelText, danger){
+  openModal(`<div class="dlg"><div class="hd"><h3>${esc(title)}</h3></div><div class="bd">${body}</div>
+    <div class="ft"><button class="btn" data-close>${esc(cancelText || 'ยกเลิก')}</button>
+    <button class="btn ${danger ? 'danger' : 'pri'}" id="dlg-ok">${esc(okText)}</button></div></div>`);
+  const ok = $('dlg-ok');
+  ok.focus();
+  ok.addEventListener('click', () => { closeModal(); onOk(); });
+}
+
+/* ═══ แสดงผล ═════════════════════════════════════════ */
+function setFlash(kind, ic, title, sub){
+  $('flash').innerHTML = kind ? `<div class="flash ${kind} pop"><span class="ic">${ic}</span><div>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ''}</div></div>` : '';
+}
+
+function thaiTime(s){
+  if(!s) return '';
+  const d = s.slice(0, 10), t = s.slice(11, 16);
+  return (d === S.today ? 'วันนี้' : d.split('-').reverse().slice(0, 2).join('/')) + ' ' + t + ' น.';
+}
+
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false'));
+  ['pack', 'today', 'codes'].forEach(t => { $('v-' + t).hidden = t !== S.tab; });
+  $('who').classList.toggle('need', !S.who);
+  if(S.tab === 'pack') renderPack();
+  if(S.tab === 'today') renderToday();
+  if(S.tab === 'codes') renderCodes();
+}
+
+function renderPack(){
+  const st = S.cur ? 2 : 1;
+  document.querySelectorAll('#steps .step').forEach(el => {
+    const n = +el.dataset.s;
+    el.className = 'step' + (n < st ? ' done' : (n === st || (st === 2 && n === 3 && pieces() > 0)) ? ' on' : '');
+  });
+  $('scan').placeholder = !S.cur ? 'ยิงบาร์โค้ดใบปะหน้า' : 'ยิงสินค้า · ยิงใบปะหน้าซ้ำเพื่อปิดกล่อง';
+  $('scan').disabled = S.busy;
+
+  const bc = $('boxcard');
+  if(!S.cur){
+    const todays = S.packs.filter(p => p.status === 'ปิดกล่อง' && p.closedAt.slice(0, 10) === S.today);
+    const mine = todays.filter(p => p.by === S.who);
+    bc.innerHTML = `<div class="empty"><div class="big">📦</div>
+      <div class="disp" style="font-size:18px;color:var(--ink)">ยังไม่ได้เปิดกล่อง</div>
+      <div class="small" style="margin-top:4px">ยิงบาร์โค้ดบนใบปะหน้าเพื่อเริ่มแพ็คกล่องใหม่</div>
+      <div class="small" style="margin-top:14px">วันนี้แพ็คแล้ว <b class="mono">${todays.length}</b> กล่อง${S.who ? ` · ของ${esc(S.who)} <b class="mono">${mine.length}</b> กล่อง` : ''}</div></div>`;
+  }else{
+    const rows = S.cur.order.slice().reverse().map(sku => {
+      const p = S.bySku[sku], l = left(sku);
+      return `<li class="line${sku === S.lastHit ? ' flashrow' : ''}">
+        <div><div class="nm">${esc(p.name)}</div>
+        <div class="meta"><span class="mono">${esc(p.sku)}</span> · คงเหลือหลังแพ็ค <span class="mono${l < 0 ? ' low' : ''}">${fmt(l)}</span>${l < 0 ? ' <span class="low">สต๊อกไม่พอ</span>' : ''}</div></div>
+        <div class="qty"><button data-dec="${esc(sku)}" aria-label="ลด">−</button><b>${S.cur.items[sku]}</b><button data-inc="${esc(sku)}" aria-label="เพิ่ม">+</button></div>
+      </li>`;
+    }).join('');
+    bc.innerHTML = `<div class="boxhead">
+        <div><div class="lbl">กำลังแพ็คใบปะหน้า</div><div class="trk">${esc(S.cur.tracking)}</div></div>
+        <div class="cnt"><div class="lbl">ในกล่อง</div><b>${pieces()}</b> <span class="small muted">ชิ้น</span></div>
+      </div>
+      ${rows ? `<ul class="lines">${rows}</ul>` : `<div class="empty"><div class="big">🛒</div>ยิงบาร์โค้ดสินค้า หรือแตะเลือกจากรายการด้านขวา</div>`}
+      <div class="boxfoot">
+        <button class="btn danger" id="cancelbox"${S.busy ? ' disabled' : ''}>ยกเลิกกล่องนี้</button>
+        <button class="btn okb big" id="closebox"${S.busy || !pieces() ? ' disabled' : ''}>✓ ปิดกล่อง ตัดสต๊อก</button>
+      </div>`;
+    S.lastHit = '';
+  }
+  renderPicker();
+}
+
+function filterProducts(q, brand){
+  q = String(q || '').trim().toLowerCase();
+  return S.products.filter(p => (!brand || p.brand === brand) &&
+    (!q || p.name.toLowerCase().indexOf(q) >= 0 || p.sku.toLowerCase().indexOf(q) >= 0));
+}
+function hasBarcode(){
+  const set = {};
+  Object.keys(S.barcodes).forEach(c => { set[S.barcodes[c].toUpperCase()] = true; });
+  return set;
+}
+function productRows(list, mode){
+  if(!list.length) return '<div class="empty small">ไม่พบสินค้า</div>';
+  const coded = hasBarcode();
+  return list.slice(0, 200).map(p => {
+    const l = left(p.sku.toUpperCase());
+    return `<button class="pitem" data-sku="${esc(p.sku)}">
+      <span class="nm"><b>${esc(p.name)}${coded[p.sku.toUpperCase()] ? '<span class="barcode-tag">มีบาร์โค้ด</span>' : ''}</b><span class="sku">${esc(p.sku)} · ${esc(p.brand)}</span></span>
+      <span class="st${l <= 0 ? ' low' : ''}">เหลือ ${fmt(l)}</span>
+      ${mode === 'link' ? '' : '<span class="plus">+</span>'}
+    </button>`;
+  }).join('');
+}
+function renderPicker(){
+  const brands = [];
+  S.products.forEach(p => { if(p.brand && brands.indexOf(p.brand) < 0) brands.push(p.brand); });
+  $('pbrands').innerHTML = ['', ...brands].map(b =>
+    `<button class="chip" data-brand="${esc(b)}" aria-pressed="${S.brand === b}">${esc(b || 'ทั้งหมด')}</button>`).join('');
+  $('plist').innerHTML = productRows(filterProducts($('psearch').value, S.brand));
+}
+
+function dayPacks(){
+  const d = $('tdate').value || S.today;
+  const q = fixScan($('tsearch').value);
+  return S.packs.filter(p => p.closedAt.slice(0, 10) === d && (!q || p.tracking.indexOf(q) >= 0))
+    .sort((a, b) => b.closedAt.localeCompare(a.closedAt));
+}
+function renderToday(){
+  const list = dayPacks();
+  const live = list.filter(p => p.status === 'ปิดกล่อง');
+  const pcs = live.reduce((a, p) => a + p.pieces, 0);
+  const byWho = {};
+  live.forEach(p => { byWho[p.by] = (byWho[p.by] || 0) + 1; });
+  const voids = list.length - live.length;
+  $('ttiles').innerHTML =
+    `<div class="tile"><span class="k">กล่องที่ปิดแล้ว</span><span class="v">${fmt(live.length)}</span><span class="u">กล่อง</span></div>` +
+    `<div class="tile"><span class="k">ชิ้นที่ตัดสต๊อก</span><span class="v">${fmt(pcs)}</span><span class="u">ชิ้น</span></div>` +
+    Object.keys(byWho).sort((a, b) => byWho[b] - byWho[a]).map(w =>
+      `<div class="tile"><span class="k">${esc(w)}</span><span class="v">${fmt(byWho[w])}</span><span class="u">กล่อง</span></div>`).join('') +
+    (voids ? `<div class="tile"><span class="k">ยกเลิก</span><span class="v">${voids}</span><span class="u">กล่อง</span></div>` : '');
+
+  const sum = {};
+  live.forEach(p => p.items.forEach(it => { sum[it.sku] = (sum[it.sku] || 0) + it.qty; }));
+  const skus = Object.keys(sum).sort((a, b) => ((S.bySku[a.toUpperCase()] || {}).seq || 9e9) - ((S.bySku[b.toUpperCase()] || {}).seq || 9e9));
+  $('tsku').innerHTML = skus.length ? `<table><thead><tr><th>สินค้า</th><th class="r">ตัดออก</th></tr></thead><tbody>` +
+    skus.map(s => `<tr><td>${esc((S.bySku[s.toUpperCase()] || {}).name || s)}<div class="small muted mono">${esc(s)}</div></td><td class="r mono">${fmt(sum[s])}</td></tr>`).join('') +
+    `</tbody></table>` : '<div class="empty small">ยังไม่มีกล่องที่ปิดในวันนี้</div>';
+
+  $('tbox').innerHTML = list.length ? `<table><thead><tr><th>เวลา</th><th>เลขพัสดุ</th><th>สินค้า</th><th>ผู้แพ็ค</th><th>วิดีโอ</th><th></th></tr></thead><tbody>` +
+    list.map(p => `<tr class="${p.status === 'ยกเลิก' ? 'void' : ''}">
+      <td class="mono">${esc(p.closedAt.slice(11, 16))}</td>
+      <td class="mono">${esc(p.tracking)}</td>
+      <td class="small">${p.items.map(it => esc(((S.bySku[it.sku.toUpperCase()] || {}).name || it.sku)) + ' ×' + it.qty).join('<br>')}</td>
+      <td>${esc(p.by)}</td>
+      <td class="keep">${videoCell(p)}</td>
+      <td class="keep r">${p.status === 'ยกเลิก' ? `<span class="pill crit">ยกเลิกโดย ${esc(p.voidBy)}</span>` : `<button class="btn danger" data-void="${esc(p.id)}" style="padding:4px 10px;font-size:13px">ยกเลิก</button>`}</td>
+    </tr>`).join('') + `</tbody></table>` : '<div class="empty small">ไม่มีกล่อง</div>';
+}
+
+function renderCodes(){
+  const codes = Object.keys(S.barcodes).sort((a, b) => {
+    const pa = S.bySku[S.barcodes[a].toUpperCase()] || {}, pb = S.bySku[S.barcodes[b].toUpperCase()] || {};
+    return (pa.seq || 9e9) - (pb.seq || 9e9);
+  });
+  $('codelist').innerHTML = codes.length ? `<table><thead><tr><th>บาร์โค้ด</th><th>สินค้า</th><th></th></tr></thead><tbody>` +
+    codes.map(c => `<tr><td class="mono">${esc(c)}</td><td>${esc((S.bySku[S.barcodes[c].toUpperCase()] || {}).name || S.barcodes[c])}<div class="small muted mono">${esc(S.barcodes[c])}</div></td>
+      <td class="r"><button class="btn danger" data-unlink="${esc(c)}" style="padding:4px 10px;font-size:13px">ลบ</button></td></tr>`).join('') +
+    `</tbody></table>` : '<div class="empty small">ยังไม่มีบาร์โค้ดที่ผูกไว้</div>';
+
+  const coded = hasBarcode();
+  const q = $('ssearch').value, onlyNo = $('snocode').checked;
+  const list = filterProducts(q, '').filter(p => !onlyNo || !coded[p.sku.toUpperCase()] || S.stk[p.sku]);
+  $('stklist').innerHTML = list.length ? `<table><thead><tr><th>สินค้า</th><th class="r">จำนวนดวง</th></tr></thead><tbody>` +
+    list.map(p => `<tr><td>${esc(p.name)}<div class="small muted mono">${esc(p.sku)}</div></td>
+      <td class="r"><input class="qtyin" type="number" min="0" max="240" inputmode="numeric" data-stk="${esc(p.sku)}" value="${S.stk[p.sku] || ''}" placeholder="0"></td></tr>`).join('') +
+    `</tbody></table>` : '<div class="empty small">ไม่พบสินค้า</div>';
+  stkCount();
+}
+function stkCount(){
+  const n = Object.values(S.stk).reduce((a, b) => a + b, 0);
+  $('stkcount').textContent = n ? `${n} ดวง · ${Math.ceil(n / 24)} แผ่น` : 'ยังไม่ได้เลือก';
+}
+function printStickers(){
+  const out = [];
+  S.products.forEach(p => { for(let i = 0; i < (S.stk[p.sku] || 0); i++) out.push(p); });
+  if(!out.length){ toast('ใส่จำนวนดวงของสินค้าที่จะพิมพ์ก่อน'); return; }
+  if(!window.JsBarcode){ toast('โหลดตัวสร้างบาร์โค้ดไม่สำเร็จ ตรวจอินเทอร์เน็ต'); return; }
+  $('sheet').innerHTML = out.map((p, i) => `<div class="stk"><div class="n">${esc(p.name)}</div><svg id="bc${i}"></svg></div>`).join('');
+  out.forEach((p, i) => JsBarcode('#bc' + i, p.sku, { format: 'CODE128', height: 50, width: 2, fontSize: 14, margin: 2, font: 'IBM Plex Mono' }));
+  setTimeout(() => window.print(), 120);
+}
+
+/* ═══ โฟกัสช่องยิง ═══════════════════════════════════
+   เครื่องยิง USB ทำตัวเหมือนคีย์บอร์ด พิมพ์รหัสแล้วกด Enter
+   ช่องยิงต้องมีโฟกัสตลอด ยกเว้นตอนกำลังพิมพ์ในช่องอื่น */
+function typingElsewhere(){
+  const a = document.activeElement;
+  return a && a !== $('scan') && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName);
+}
+function focusScan(){
+  if(S.tab !== 'pack' || modalOpen() || typingElsewhere()) return updateDot();
+  $('scan').focus({ preventScroll: true });
+  updateDot();
+}
+function updateDot(){
+  const on = document.activeElement === $('scan');
+  $('focusdot').classList.toggle('off', !on);
+  $('focustxt').textContent = on ? 'พร้อมรับการยิง' : 'คลิกที่ช่องด้านบน หรือยิงได้เลย ระบบจะดึงโฟกัสกลับเอง';
+}
+
+/* ═══ ผูกเหตุการณ์ ════════════════════════════════════ */
+$('scanform').addEventListener('submit', e => { e.preventDefault(); const v = $('scan').value; $('scan').value = ''; onScan(v); });
+$('scan').addEventListener('keydown', e => {
+  if(e.key === 'Tab' && $('scan').value){ e.preventDefault(); const v = $('scan').value; $('scan').value = ''; onScan(v); }
+});
+$('scan').addEventListener('focus', updateDot);
+$('scan').addEventListener('blur', () => setTimeout(updateDot, 0));
+document.addEventListener('keydown', e => {
+  if(modalOpen()){ if(e.key === 'Escape') closeModal(); return; }
+  if(S.tab !== 'pack' || typingElsewhere() || document.activeElement === $('scan')) return;
+  if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) $('scan').focus();
+}, true);
+document.addEventListener('click', e => {
+  if(!e.target.closest('input,select,textarea,label,.modal')) setTimeout(focusScan, 0);
+});
+
+$('cambtn').addEventListener('click', openCamera);
+$('tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if(!b) return;
+  S.tab = b.dataset.tab; render(); focusScan();
+});
+$('who').addEventListener('change', e => {
+  S.who = e.target.value; store.set('rlk_stock_who', S.who); render(); e.target.blur(); focusScan();
+});
+$('reload').addEventListener('click', () => load());
+$('back').href = BASE_URL || '#';
+
+$('boxcard').addEventListener('click', e => {
+  const inc = e.target.closest('[data-inc]'), dec = e.target.closest('[data-dec]');
+  if(inc) addItem(inc.dataset.inc, 1, false);
+  if(dec) addItem(dec.dataset.dec, -1, false);
+  if(e.target.closest('#closebox')) closeBox(true);
+  if(e.target.closest('#cancelbox')) cancelBox();
+});
+$('pbrands').addEventListener('click', e => {
+  const b = e.target.closest('[data-brand]'); if(!b) return;
+  S.brand = b.dataset.brand; renderPicker();
+});
+$('psearch').addEventListener('input', () => { $('plist').innerHTML = productRows(filterProducts($('psearch').value, S.brand)); });
+$('psearch').addEventListener('keydown', e => { if(e.key === 'Escape'){ $('psearch').value = ''; renderPicker(); $('scan').focus(); } });
+$('plist').addEventListener('click', e => {
+  const b = e.target.closest('[data-sku]'); if(!b) return;
+  if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน', 'ต้องเปิดกล่องด้วยใบปะหน้าก่อนจึงจะใส่สินค้าได้'); beep.err(); return; }
+  addItem(b.dataset.sku.toUpperCase(), 1, false);
+});
+
+$('tdate').addEventListener('change', renderToday);
+$('tsearch').addEventListener('input', renderToday);
+$('tbox').addEventListener('click', e => {
+  const b = e.target.closest('[data-void]'); if(!b) return;
+  if(!S.who){ toast('เลือกชื่อก่อน'); return; }
+  const p = S.packs.find(x => x.id === b.dataset.void);
+  confirmBox('ยกเลิกกล่องที่ปิดแล้ว?',
+    `<p><span class="code">${esc(p.tracking)}</span> · ${p.pieces} ชิ้น · แพ็คโดย ${esc(p.by)}</p>
+     <p>รายการขายของกล่องนี้จะถูกลบออกจากสต๊อก ยอดคงเหลือกลับเท่าเดิม และยิงใบปะหน้านี้แพ็คใหม่ได้</p>`,
+    'ยกเลิกกล่อง', () => {
+      call('apiVoidPack', p.id, S.who).then(r => {
+        if(!r.ok){ toast(r.error, 4000); return; }
+        p.status = 'ยกเลิก'; p.voidBy = S.who;
+        p.items.forEach(it => { const x = S.bySku[it.sku.toUpperCase()]; if(x) x.qty += it.qty; });
+        toast('ยกเลิกกล่องแล้ว สต๊อกคืนเรียบร้อย'); render();
+      }).catch(err => toast('ยกเลิกไม่สำเร็จ — ' + ((err && err.message) || ''), 4000));
+    }, 'ไม่ยกเลิก', true);
+});
+
+$('linkform').addEventListener('submit', e => {
+  e.preventDefault();
+  const c = fixScan($('linkscan').value); $('linkscan').value = '';
+  if(!c) return;
+  if(!S.who){ toast('เลือกชื่อก่อน'); return; }
+  unknownCode(c, true);
+});
+$('codelist').addEventListener('click', e => {
+  const b = e.target.closest('[data-unlink]'); if(!b) return;
+  const c = b.dataset.unlink;
+  confirmBox('ลบบาร์โค้ดนี้?', `<p><span class="code">${esc(c)}</span> จะไม่ถูกจำว่าเป็นสินค้าใดอีก</p>`, 'ลบ', () => {
+    delete S.barcodes[c]; renderCodes();
+    call('apiUnlinkBarcode', c).catch(() => toast('ลบไม่สำเร็จ', 4000));
+  }, 'ยกเลิก', true);
+});
+$('ssearch').addEventListener('input', renderCodes);
+$('snocode').addEventListener('change', renderCodes);
+$('stklist').addEventListener('input', e => {
+  const i = e.target.closest('[data-stk]'); if(!i) return;
+  const n = Math.max(0, Math.min(240, Math.floor(Number(i.value) || 0)));
+  if(n) S.stk[i.dataset.stk] = n; else delete S.stk[i.dataset.stk];
+  stkCount();                          // ห้าม render ทั้งตารางระหว่างพิมพ์ เคอร์เซอร์จะกระโดด
+});
+$('stkclear').addEventListener('click', () => { S.stk = {}; renderCodes(); });
+$('stkprint').addEventListener('click', printStickers);
+
+/* โหลดใหม่เงียบๆ ทุก 3 นาทีถ้าไม่ได้แพ็คค้างอยู่ — เห็นกล่องที่เครื่องอื่นปิด */
+setInterval(() => { if(!S.cur && !S.busy && !modalOpen() && !document.hidden) load(true); }, 180000);
+setInterval(() => { flushVideos(); }, 60000);
+
+/* ═══ วิดีโอการแพ็ค ═════════════════════════════════
+   กล้อง → วาดลง canvas พร้อมฝังเลขพัสดุ/ผู้แพ็ค/เวลา → อัดจาก canvas
+   ภาพที่ได้จึงมีข้อมูลกำกับในตัว ใช้เป็นหลักฐานได้แม้ไฟล์ถูกเปลี่ยนชื่อ
+   ไฟล์ที่อัปโหลดไม่สำเร็จเก็บไว้ในเครื่อง (IndexedDB) แล้วลองส่งใหม่ทุกนาที */
+const VID = {
+  stream: null, video: null, ctx: null, timer: 0, rec: null, chunks: [],
+  tracking: '', startedAt: 0, mime: '', pending: {}, uploading: false
+};
+const VID_FPS = 15, VID_BPS = 450000, VID_MAX_MS = 8 * 60 * 1000;
+
+function vidInit(){
+  $('vidon').checked = store.get('rlk_pack_video') === '1';
+  if($('vidon').checked) vidEnable();
+  idbAll().then(list => { list.forEach(v => { VID.pending[v.packId] = v.tracking; }); renderUpq(); flushVideos(); });
+}
+
+function vidEnable(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder){
+    vidFail('เบราว์เซอร์นี้อัดวิดีโอไม่ได้ — ใช้ Chrome บนคอมพิวเตอร์หรือ Android'); return;
+  }
+  const dev = store.get('rlk_pack_cam');
+  const want = { width: { ideal: 1280 }, height: { ideal: 720 } };
+  if(dev) want.deviceId = { exact: dev }; else want.facingMode = 'environment';
+  navigator.mediaDevices.getUserMedia({ video: want, audio: false })
+    .catch(() => navigator.mediaDevices.getUserMedia({ video: true, audio: false }))
+    .then(stream => {
+      VID.stream = stream;
+      VID.video = document.createElement('video');
+      VID.video.muted = true; VID.video.playsInline = true; VID.video.srcObject = stream;
+      VID.video.play().catch(()=>{});
+      VID.ctx = $('vidcanvas').getContext('2d');
+      clearInterval(VID.timer);
+      VID.timer = setInterval(vidDraw, 1000 / VID_FPS);
+      $('vidwrap').hidden = false; $('vidoff').hidden = true;
+      $('vidonlbl').textContent = 'เปิดอยู่';
+      listCams(stream);
+      if(S.cur && !VID.rec) vidStart(S.cur.tracking);
+    })
+    .catch(e => vidFail('เปิดกล้องไม่ได้ — ' + ((e && e.name === 'NotAllowedError') ? 'ไม่ได้รับอนุญาตให้ใช้กล้อง กดอนุญาตที่แถบที่อยู่ของเบราว์เซอร์' : ((e && e.message) || 'ไม่พบกล้อง'))));
+}
+function vidFail(msg){
+  vidDisable();
+  $('vidon').checked = false;
+  $('vidoff').innerHTML = `<div class="flash err" style="margin:0;font-size:14px"><span class="ic">📷</span><div>${esc(msg)}</div></div>`;
+}
+function vidDisable(){
+  vidDiscard();
+  clearInterval(VID.timer);
+  if(VID.stream) VID.stream.getTracks().forEach(t => t.stop());
+  VID.stream = null;
+  $('vidwrap').hidden = true; $('vidoff').hidden = false;
+  $('vidonlbl').textContent = 'ปิดอยู่';
+}
+function listCams(stream){
+  navigator.mediaDevices.enumerateDevices().then(ds => {
+    const cams = ds.filter(d => d.kind === 'videoinput');
+    const cur = (stream.getVideoTracks()[0].getSettings() || {}).deviceId;
+    $('viddev').innerHTML = cams.map((d, i) => `<option value="${esc(d.deviceId)}"${d.deviceId === cur ? ' selected' : ''}>${esc(d.label || 'กล้อง ' + (i + 1))}</option>`).join('');
+    $('viddev').hidden = cams.length < 2;
+  }).catch(()=>{});
+}
+
+function two(n){ return String(n).padStart(2, '0'); }
+function vidDraw(){
+  const c = VID.ctx, v = VID.video; if(!c || !v) return;
+  const W = 640, H = 360;
+  if(v.readyState >= 2){
+    const r = Math.max(W / v.videoWidth, H / v.videoHeight);       // เต็มกรอบ ตัดขอบส่วนเกิน
+    const w = v.videoWidth * r, h = v.videoHeight * r;
+    c.drawImage(v, (W - w) / 2, (H - h) / 2, w, h);
+  }else{ c.fillStyle = '#0E1216'; c.fillRect(0, 0, W, H); }
+  const d = new Date();
+  const ts = `${two(d.getDate())}/${two(d.getMonth() + 1)}/${d.getFullYear() + 543} ${two(d.getHours())}:${two(d.getMinutes())}:${two(d.getSeconds())}`;
+  c.fillStyle = 'rgba(0,0,0,.62)'; c.fillRect(0, H - 54, W, 54);
+  c.fillStyle = '#fff'; c.textBaseline = 'middle';
+  if(VID.rec){
+    const sec = Math.floor((Date.now() - VID.startedAt) / 1000);
+    c.font = '600 21px "IBM Plex Mono", monospace';
+    c.fillText(VID.tracking, 14, H - 36);
+    c.font = '15px "IBM Plex Sans Thai", sans-serif';
+    c.fillText(`ผู้แพ็ค ${S.who} · ${ts} · ${pieces()} ชิ้น`, 14, H - 14);
+    c.fillStyle = '#E53935'; c.beginPath(); c.arc(W - 70, 22, 7, 0, 7); c.fill();
+    c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(W - 60, 10, 52, 24);
+    c.fillStyle = '#fff'; c.font = '600 15px "IBM Plex Mono", monospace';
+    c.fillText(`${two(Math.floor(sec / 60))}:${two(sec % 60)}`, W - 55, 22);
+  }else{
+    c.font = '15px "IBM Plex Sans Thai", sans-serif';
+    c.fillText(`พร้อมอัด — ยิงใบปะหน้าเพื่อเริ่ม · ${ts}`, 14, H - 27);
+  }
+}
+
+function pickMime(){
+  const opts = ['video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'];
+  for(const m of opts){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(e){} }
+  return '';
+}
+function vidStart(tracking){
+  if(!VID.stream) return;
+  vidDiscard();
+  try{
+    const mime = pickMime();
+    const rec = new MediaRecorder($('vidcanvas').captureStream(VID_FPS), mime ? { mimeType: mime, videoBitsPerSecond: VID_BPS } : { videoBitsPerSecond: VID_BPS });
+    VID.chunks = []; VID.mime = rec.mimeType || mime || 'video/webm';
+    rec.ondataavailable = e => { if(e.data && e.data.size) VID.chunks.push(e.data); };
+    rec.start(1000);
+    VID.rec = rec; VID.tracking = tracking; VID.startedAt = Date.now();
+    $('vidstate').innerHTML = `<span class="rec">กำลังอัด ${esc(tracking)}</span>`;
+    clearTimeout(VID.maxT);
+    VID.maxT = setTimeout(() => {          // ยาวเกินไป ตัดจบไว้ก่อน ไฟล์จะได้ไม่ใหญ่จนอัปโหลดไม่ขึ้น
+      if(VID.rec && VID.tracking === tracking){ VID.rec.stop(); VID.rec = null; $('vidstate').textContent = 'หยุดอัดแล้ว (ครบ 8 นาที) รอปิดกล่อง'; }
+    }, VID_MAX_MS);
+  }catch(e){
+    $('vidstate').textContent = 'อัดวิดีโอไม่ได้: ' + ((e && e.message) || '');
+  }
+}
+function vidStop(){
+  clearTimeout(VID.maxT);
+  const rec = VID.rec; VID.rec = null;
+  if($('vidstate')) $('vidstate').textContent = 'พร้อมอัด';
+  if(!rec && !VID.chunks.length) return Promise.resolve(null);
+  return new Promise(res => {
+    const finish = () => {
+      const blob = VID.chunks.length ? new Blob(VID.chunks, { type: VID.mime.split(';')[0] }) : null;
+      VID.chunks = []; res(blob);
+    };
+    if(!rec || rec.state === 'inactive') return finish();
+    rec.onstop = finish; rec.stop();
+  });
+}
+function vidDiscard(){
+  clearTimeout(VID.maxT);
+  if(VID.rec){ VID.rec.ondataavailable = null; try{ VID.rec.stop(); }catch(e){} }
+  VID.rec = null; VID.chunks = [];
+  if($('vidstate')) $('vidstate').textContent = 'พร้อมอัด';
+}
+
+/* คิวอัปโหลด — เก็บลงเครื่องก่อนเสมอ ปิดเบราว์เซอร์ไปก็ไม่หาย */
+function queueVideo(pack, blob){
+  const rec = { packId: pack.id, tracking: pack.tracking, who: pack.by, mime: blob.type || 'video/webm', blob: blob, at: Date.now() };
+  VID.pending[pack.id] = pack.tracking; renderUpq();
+  idbPut(rec).then(flushVideos, () => uploadOne(rec));
+}
+function flushVideos(){
+  if(VID.uploading) return;
+  idbAll().then(list => {
+    if(!list.length) return;
+    list.sort((a, b) => a.at - b.at);
+    VID.uploading = true;
+    const next = i => {
+      if(i >= list.length){ VID.uploading = false; renderUpq(); return; }
+      uploadOne(list[i]).then(() => next(i + 1), () => { VID.uploading = false; renderUpq(); });
+    };
+    next(0);
+  });
+}
+function uploadOne(v){
+  if(v.blob.size > 45 * 1024 * 1024){              // ใหญ่เกินที่ Apps Script รับได้ — บันทึกลงเครื่องแทน
+    downloadBlob(v.blob, `${v.tracking}.${v.mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm'}`);
+    return idbDel(v.packId).then(() => { delete VID.pending[v.packId]; toast('วิดีโอ ' + v.tracking + ' ใหญ่เกินไป บันทึกลงเครื่องนี้แทน', 5000); });
+  }
+  renderUpq('กำลังอัปโหลด ' + v.tracking + ` (${(v.blob.size / 1048576).toFixed(1)} MB)`);
+  return blobToB64(v.blob)
+    .then(b64 => call('apiSaveVideo', v.packId, v.tracking, v.who, v.mime, b64))
+    .then(r => {
+      if(!r || !r.ok) throw new Error((r && r.error) || 'อัปโหลดไม่สำเร็จ');
+      const p = S.packs.find(x => x.id === v.packId); if(p) p.video = r.url;
+      delete VID.pending[v.packId];
+      return idbDel(v.packId).then(() => { if(S.tab === 'today') renderToday(); renderUpq(); });
+    })
+    .catch(e => { renderUpq('อัปโหลดไม่สำเร็จ จะลองใหม่อัตโนมัติ — ' + ((e && e.message) || '')); throw e; });
+}
+function blobToB64(blob){
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1] || '');
+    fr.onerror = rej; fr.readAsDataURL(blob);
+  });
+}
+function downloadBlob(blob, name){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+function renderUpq(msg){
+  const n = Object.keys(VID.pending).length;
+  $('upq').innerHTML = msg ? `<div style="margin-top:8px">⏫ ${esc(msg)}${n > 1 ? ` · ค้างอีก ${n - 1}` : ''}</div>`
+    : n ? `<div style="margin-top:8px">⏫ รออัปโหลด ${n} วิดีโอ</div>` : '';
+}
+function videoCell(p){
+  if(p.video) return `<a href="${esc(p.video)}" target="_blank" rel="noopener" title="เปิดวิดีโอใน Google Drive">🎬 ดู</a>`;
+  if(VID.pending[p.id]) return '<span class="pill">กำลังอัปโหลด</span>';
+  return '<span class="muted small">—</span>';
+}
+
+/* IndexedDB เล็กๆ สำหรับคิววิดีโอ */
+let idbP;
+function idb(){
+  if(!idbP) idbP = new Promise((res, rej) => {
+    try{
+      const r = indexedDB.open('rlk_pack', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('videos', { keyPath: 'packId' });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }catch(e){ rej(e); }
+  });
+  return idbP;
+}
+function idbTx(mode, fn){
+  return idb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('videos', mode), st = tx.objectStore('videos');
+    const out = fn(st);
+    tx.oncomplete = () => res(out && out.result); tx.onerror = () => rej(tx.error);
+  }));
+}
+function idbPut(v){ return idbTx('readwrite', st => st.put(v)); }
+function idbDel(id){ return idbTx('readwrite', st => st.delete(id)).catch(()=>{}); }
+function idbAll(){ return idbTx('readonly', st => st.getAll()).then(x => x || []).catch(() => []); }
+
+$('vidon').addEventListener('change', e => {
+  store.set('rlk_pack_video', e.target.checked ? '1' : '0');
+  if(e.target.checked) vidEnable(); else vidDisable();
+  e.target.blur(); focusScan();
+});
+$('viddev').addEventListener('change', e => {
+  store.set('rlk_pack_cam', e.target.value);
+  const recording = S.cur && VID.rec;
+  vidDisable(); $('vidon').checked = true; vidEnable();
+  if(recording) toast('เปลี่ยนกล้องแล้ว วิดีโอกล่องนี้จะเริ่มอัดใหม่');
+  e.target.blur();
+});
+
+/* ═══ เริ่ม ══════════════════════════════════════════ */
+(function init(){
+  S.who = (START_USER && START_USER.indexOf('<' + '?') < 0 ? START_USER : '') || store.get('rlk_stock_who') || '';
+  if(START_USER && START_USER.indexOf('<' + '?') < 0) store.set('rlk_stock_who', START_USER);
+  try{ const c = JSON.parse(store.get('rlk_pack_cur') || 'null'); if(c && c.tracking) S.cur = c; }catch(e){}
+  if(DEMO) $('demo').hidden = false;
+  render();
+  vidInit();
+  load().then(() => {
+    if(S.cur){
+      // ตัดสินค้าที่ถูกลบออกจากระบบไปแล้ว กันกล่องค้างพัง
+      S.cur.order = S.cur.order.filter(s => S.bySku[s]);
+      Object.keys(S.cur.items).forEach(s => { if(!S.bySku[s]) delete S.cur.items[s]; });
+      if(VID.stream) vidStart(S.cur.tracking);
+      setFlash('warn', '📦', 'มีกล่องที่แพ็คค้างไว้', `${S.cur.tracking} — แพ็คต่อได้เลย หรือกด "ยกเลิกกล่องนี้"`);
+      render();
+    }
+    focusScan();
+  });
+  focusScan();
+})();
+
+/* ═══ ข้อมูลตัวอย่าง (เปิดด้วย ?demo=1 เท่านั้น) ═══ */
+function demoApi(fn, a){
+  if(!window._demo){
+    const P = [
+      ['RLK-001','เซรั่มล้างหน้าบัวหิมะทองคำ 24K','มาดามหลุยส์',84],['RLK-002','ครีมบัวหิมะ Snowlotus 30g','มาดามหลุยส์',41],
+      ['RLK-003','สบู่มาดามหลุยส์','มาดามหลุยส์',12],['VTL-001','VTAL คอลลาเจน','VTAL&อื่นๆ',66],['VTL-002','Pow S Coffee','VTAL&อื่นๆ',3],
+      ['CAL-001','CalCopa แคลเซียม','CalCopa',120],['MED-001','Mediral เจล','Mediral',25],['GIF-001','ถุงผ้าของแถม','อุปกรณ์/ของแถม',200]
+    ];
+    window._demo = {
+      products: P.map((p, i) => ({ seq: i + 1, sku: p[0], name: p[1], brand: p[2], unit: 'ชิ้น', qty: p[3] })),
+      barcodes: { '8851234567893': 'RLK-001' },
+      packs: [{ id: 'pk1', tracking: 'TH0123456789A', status: 'ปิดกล่อง', items: [{ sku: 'RLK-001', qty: 2 }, { sku: 'GIF-001', qty: 1 }], pieces: 3, by: 'แป้ง', closedAt: new Date().toISOString().slice(0, 10) + ' 09:12:00', voidBy: '' }],
+      people: ['แป้ง', 'โอ้', 'มนต์']
+    };
+  }
+  const D = window._demo, today = new Date().toISOString().slice(0, 10);
+  if(fn === 'apiPackLoad') return Object.assign(JSON.parse(JSON.stringify(D)), { ok: true, today: today });
+  if(fn === 'apiClosePack'){
+    const pack = { id: 'pk' + Date.now(), tracking: a[0], status: 'ปิดกล่อง', items: a[1], pieces: a[1].reduce((s, i) => s + i.qty, 0), by: a[2], closedAt: today + ' ' + new Date().toTimeString().slice(0, 8), voidBy: '' };
+    return { ok: true, pack: pack };
+  }
+  if(fn === 'apiSaveVideo') return { ok: true, url: URL.createObjectURL(new Blob([Uint8Array.from(atob(a[4]), c => c.charCodeAt(0))], { type: a[3] })) };
+  return { ok: true };
+}
+</script>
+</body>
+</html>
