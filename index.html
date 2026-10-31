@@ -170,6 +170,9 @@ button,input,select{font:inherit;color:inherit}
 .pitem .sku{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-3)}
 .pitem .st{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);white-space:nowrap}
 .pitem .st.low{color:var(--crit)}
+.lottag{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);vertical-align:1px;white-space:nowrap}
+.lottag.old{background:var(--surface-3);color:var(--ink-2)}
+.lotpick{display:grid;border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
 .pitem .plus{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;flex:none}
 .barcode-tag{font-size:10.5px;padding:1px 6px;border-radius:5px;background:var(--ok-soft);color:var(--ok);margin-left:4px;font-family:"IBM Plex Sans Thai",sans-serif;vertical-align:1px}
 
@@ -391,7 +394,7 @@ let API_KEY = '';
 const S = {
   products: [], bySku: {}, barcodes: {}, packs: [], people: [], today: '',
   who: '', tab: 'pack', brand: '', loaded: false,
-  cur: null,            // กล่องที่กำลังแพ็ค {tracking, items:{sku:qty}, order:[sku], openedAt}
+  cur: null,            // กล่องที่กำลังแพ็ค {tracking, items:{คีย์:qty}, order:[คีย์], openedAt} · คีย์ = SKU หรือ SKU@Lot
   busy: false, stk: {}, lastHit: ''
 };
 
@@ -466,9 +469,9 @@ function fixScan(raw){
   return s.replace(/\s+/g, '').toUpperCase();
 }
 
-/* EAN-13 / EAN-8 ที่ checksum ถูก = น่าจะเป็นบาร์โค้ดสินค้า ไม่ใช่ใบปะหน้า */
+/* EAN-13 / UPC-A / EAN-8 ที่ checksum ถูก = น่าจะเป็นบาร์โค้ดสินค้า ไม่ใช่ใบปะหน้า */
 function looksLikeEan(c){
-  if(!/^(\d{8}|\d{13})$/.test(c)) return false;
+  if(!/^(\d{8}|\d{12}|\d{13})$/.test(c)) return false;
   const d = c.split('').map(Number), chk = d.pop();
   let sum = 0;
   d.reverse().forEach((n, i) => { sum += n * (i % 2 === 0 ? 3 : 1); });
@@ -480,8 +483,23 @@ function skuOf(code){
   if(S.bySku[code]) return code;
   return null;
 }
-function inBox(sku){ return S.cur && S.cur.items[sku] || 0; }
-function left(sku){ const p = S.bySku[sku]; return (p ? p.qty : 0) - inBox(sku); }
+/* Lot — ของในกล่องเก็บแยกตาม สินค้า×Lot · ไม่มี @ = Lot เดิม (สต๊อกก่อนเริ่มแยก Lot) */
+const bk = (sku, lot) => sku + (lot ? '@' + lot : '');
+const bkSplit = k => { const i = k.indexOf('@'); return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 1)]; };
+const lotName = lot => lot ? 'Lot ' + lot : 'Lot เดิม';
+const lotTag = lot => `<span class="lottag${lot ? '' : ' old'}">${esc(lotName(lot))}</span>`;
+function lotsOf(sku){ const p = S.bySku[sku]; return (p && p.lots) || []; }
+function lotQty(k){ const [sku, lot] = bkSplit(k); const l = lotsOf(sku).find(x => x.lot === lot); return l ? l.qty : 0; }
+function shortDate(iso){ if(!iso) return ''; const [y, m, d] = iso.split('-'); return d + '/' + m + '/' + String((+y + 543) % 100).padStart(2, '0'); }
+
+function inBox(k){ return S.cur && S.cur.items[k] || 0; }
+function left(k){ return lotQty(k) - inBox(k); }
+// คงเหลือรวมของสินค้า หลังหักที่อยู่ในกล่อง (ทุก Lot)
+function leftSku(sku){
+  const p = S.bySku[sku]; let n = p ? p.qty : 0;
+  if(S.cur) Object.keys(S.cur.items).forEach(k => { if(bkSplit(k)[0] === sku) n -= S.cur.items[k]; });
+  return n;
+}
 function pieces(){ return S.cur ? Object.values(S.cur.items).reduce((a, b) => a + b, 0) : 0; }
 
 /* ═══ โหลดข้อมูล ══════════════════════════════════════ */
@@ -548,14 +566,24 @@ function onScan(raw){
   if(code === S.cur.tracking) return closeBox(false);   // ── ขั้น 3: ยิงใบปะหน้าซ้ำ
 
   const sku = skuOf(code);                         // ── ขั้น 2: ยิงสินค้า
-  if(sku) return addItem(sku, 1, true);
+  if(sku) return addProduct(sku, true);
 
   if(closedPack(code)){
     setFlash('err', '⛔', 'นี่คือใบปะหน้าของกล่องอื่น', `${code} ปิดกล่องไปแล้ว · กล่องที่เปิดอยู่คือ ${S.cur.tracking}`);
     return beep.err();
   }
+  if(looksLikeTracking(code)){                     // ไม่ถามให้ผูก — กันพนักงานผูกใบปะหน้าเป็นสินค้า
+    setFlash('err', '⛔', 'ยิงผิดใบ — รหัสนี้เป็นใบปะหน้าอีกใบ', `${code} · กล่องที่เปิดอยู่คือ ${S.cur.tracking} — ยิงใบเดิมเพื่อปิดกล่อง หรือกด "ยกเลิกกล่องนี้"`);
+    return beep.err();
+  }
   beep.err();
   unknownCode(code);
+}
+
+/* หน้าตาเป็นเลขพัสดุ: มีทั้งตัวอักษรและตัวเลขยาว (TH…, KER…, EF…TH) หรือเลขล้วน 10–16 หลักที่ไม่ใช่บาร์โค้ดสินค้า */
+function looksLikeTracking(c){
+  if(looksLikeEan(c)) return false;
+  return (c.length >= 10 && /[A-Z]/.test(c) && /\d{6,}/.test(c)) || /^\d{10,16}$/.test(c);
 }
 
 function closedPack(code){
@@ -570,24 +598,74 @@ function openBox(code){
   render();
 }
 
-function addItem(sku, n, scanned){
+/* ยิง/แตะสินค้า: มี Lot ที่มีของแค่ Lot เดียว → ใส่กล่องเลย · หลาย Lot → ให้เลือกทุกครั้ง */
+function addProduct(sku, scanned){
   if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน'); return beep.err(); }
+  const all = lotsOf(sku);
+  const live = all.filter(l => l.qty > 0);
+  const opts = live.length ? live : (all.length ? all : [{ lot: '', qty: 0 }]);
+  if(opts.length === 1) return addItem(bk(sku, opts[0].lot), 1, scanned);
+  pickLot(sku, opts, lot => addItem(bk(sku, lot), 1, scanned));
+}
+function pickLot(sku, opts, onPick){
   const p = S.bySku[sku];
-  const q = Math.max(0, inBox(sku) + n);
-  if(q === 0){ delete S.cur.items[sku]; S.cur.order = S.cur.order.filter(s => s !== sku); }
+  beep.open();
+  setFlash('warn', '🔖', `${p.name} มีหลาย Lot`, 'เลือก Lot ที่หยิบใส่กล่อง — แตะ หรือกดเลขบนคีย์บอร์ด');
+  openModal(`<div class="dlg">
+    <div class="hd"><h3>เลือก Lot ของ ${esc(p.name)}</h3>
+      <p class="small muted" style="margin:6px 0 0">ดูรหัส Lot / วันหมดอายุบนกล่องสินค้าที่หยิบ</p></div>
+    <div class="bd"><div class="lotpick">${opts.map((l, i) => {
+      const k = bk(sku, l.lot), lf = left(k);
+      return `<button class="pitem" data-lot="${esc(l.lot)}"><span class="plus">${i < 9 ? i + 1 : '•'}</span>
+        <span class="nm"><b>${esc(lotName(l.lot))}</b><span class="sku">${l.exp ? 'หมดอายุ ' + esc(shortDate(l.exp)) : 'ไม่ระบุวันหมดอายุ'}${l.mfg ? ' · ผลิต ' + esc(shortDate(l.mfg)) : ''}</span></span>
+        <span class="st${lf <= 0 ? ' low' : ''}">เหลือ ${fmt(lf)}</span></button>`;
+    }).join('')}</div></div>
+    <div class="ft"><button class="btn" data-close>ยกเลิก</button></div>
+  </div>`, () => document.removeEventListener('keydown', onKey, true));
+  const choose = lot => { clearTimeout(t); closeModal(); onPick(lot); };
+  // เครื่องยิงพิมพ์ตัวเลขรัวๆ — ถ้าคีย์มาติดกันเร็วกว่าคนกด แปลว่าเป็นการยิงบาร์โค้ด ไม่ใช่การเลือก Lot
+  let t = 0, burst = false, last = 0;
+  const onKey = e => {
+    if(e.key === 'Escape') return;
+    const now = Date.now();
+    if(now - last < 80) burst = true;
+    last = now;
+    if(e.key.length === 1 || e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); }
+    clearTimeout(t);
+    const n = Number(e.key);
+    if(!burst && e.key.length === 1 && n >= 1 && n <= Math.min(9, opts.length)) t = setTimeout(() => choose(opts[n - 1].lot), 150);
+    else if(burst){
+      setFlash('err', '🔖', 'ยังไม่ได้เลือก Lot', `เลือก Lot ของ ${p.name} ก่อน แล้วค่อยยิงชิ้นถัดไป`);
+      beep.err();
+      t = setTimeout(() => { burst = false; }, 300);
+    }
+  };
+  document.addEventListener('keydown', onKey, true);
+  $('modal').querySelector('.lotpick').addEventListener('click', e => {
+    const b = e.target.closest('[data-lot]'); if(b) choose(b.dataset.lot);
+  });
+}
+
+function addItem(k, n, scanned){
+  if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน'); return beep.err(); }
+  const [sku, lot] = bkSplit(k);
+  const p = S.bySku[sku];
+  const q = Math.max(0, inBox(k) + n);
+  if(q === 0){ delete S.cur.items[k]; S.cur.order = S.cur.order.filter(s => s !== k); }
   else{
-    if(!S.cur.items[sku]) S.cur.order.push(sku);
-    S.cur.items[sku] = q;
+    if(!S.cur.items[k]) S.cur.order.push(k);
+    S.cur.items[k] = q;
   }
   saveCur();
   if(n > 0){
-    S.lastHit = sku;
-    const l = left(sku);
+    S.lastHit = k;
+    const l = left(k);
+    const many = lotsOf(sku).length > 1 || lot;
     if(l < 0){
-      setFlash('warn', '⚠️', `${p.name} × ${q}`, `สต๊อกในระบบไม่พอ (เหลือ ${fmt(p.qty)}) — ยังแพ็คได้ แต่ควรแจ้งคนนับสต๊อก`);
+      setFlash('warn', '⚠️', `${p.name}${many ? ' · ' + lotName(lot) : ''} × ${q}`, `สต๊อก${many ? ' ' + lotName(lot) : ''} ในระบบไม่พอ (เหลือ ${fmt(lotQty(k))}) — ยังแพ็คได้ แต่ควรแจ้งคนนับสต๊อก`);
       beep.err();
     }else{
-      setFlash('ok', scanned ? '✓' : '＋', `${p.name} × ${q}`, `ในกล่อง ${pieces()} ชิ้น · คงเหลือหลังแพ็ค ${fmt(l)}`);
+      setFlash('ok', scanned ? '✓' : '＋', `${p.name}${many ? ' · ' + lotName(lot) : ''} × ${q}`, `ในกล่อง ${pieces()} ชิ้น · คงเหลือหลังแพ็ค ${fmt(l)}`);
       beep.ok();
     }
   }
@@ -603,7 +681,7 @@ function closeBox(fromButton){
   }
   const go = () => {
     const cur = S.cur;
-    const items = cur.order.map(sku => ({ sku: S.bySku[sku].sku, qty: cur.items[sku] }));
+    const items = cur.order.map(k => { const [sku, lot] = bkSplit(k); return { sku: S.bySku[sku].sku, lot: lot, qty: cur.items[k] }; });
     S.busy = true; render();
     setFlash('info', '⏳', 'กำลังปิดกล่องและตัดสต๊อก…', cur.tracking);
     call('apiClosePack', cur.tracking, items, S.who, '').then(r => {
@@ -613,7 +691,7 @@ function closeBox(fromButton){
         setFlash('err', '⛔', r.error, r.pack ? `ปิดเมื่อ ${thaiTime(r.pack.closedAt)} โดย ${r.pack.by}` : '');
         beep.err(); render(); return;
       }
-      items.forEach(it => { S.bySku[it.sku.toUpperCase()].qty -= it.qty; });
+      items.forEach(it => stockAdd(it, -1));
       S.packs.push(r.pack);
       vidStop().then(blob => { if(blob) queueVideo(r.pack, blob); });
       S.cur = null; saveCur();
@@ -629,7 +707,7 @@ function closeBox(fromButton){
   if(!fromButton) return go();
   confirmBox('ปิดกล่องและตัดสต๊อก?',
     `<p><span class="code">${esc(S.cur.tracking)}</span> · ${n} ชิ้น</p><ul>` +
-    S.cur.order.map(s => `<li>${esc(S.bySku[s].name)} × <b>${S.cur.items[s]}</b></li>`).join('') +
+    S.cur.order.map(k => { const [sku, lot] = bkSplit(k); return `<li>${esc(S.bySku[sku].name)} ${lotTag(lot)} × <b>${S.cur.items[k]}</b></li>`; }).join('') +
     `</ul><p class="small muted">ครั้งหน้ายิงใบปะหน้าซ้ำแทนการกดปุ่มได้ เร็วกว่า</p>`,
     'ปิดกล่อง', go);
 }
@@ -646,6 +724,14 @@ function cancelBox(){
 
 function saveCur(){ store.set('rlk_pack_cur', S.cur ? JSON.stringify(S.cur) : null); }
 
+// ปรับยอดในเครื่องหลังปิด/ยกเลิกกล่อง ไม่ต้องรอโหลดใหม่ (sign −1 = ตัดออก, +1 = คืน)
+function stockAdd(it, sign){
+  const p = S.bySku[String(it.sku).toUpperCase()]; if(!p) return;
+  p.qty += sign * it.qty;
+  const l = (p.lots || []).find(x => x.lot === (it.lot || ''));
+  if(l) l.qty += sign * it.qty; else (p.lots = p.lots || []).push({ lot: it.lot || '', mfg: '', exp: '', qty: sign * it.qty });
+}
+
 /* บาร์โค้ดที่ไม่รู้จัก → เลือกสินค้าแล้วจำไว้ */
 function unknownCode(code, forLinkOnly){
   setFlash('warn', '❓', 'ไม่รู้จักบาร์โค้ดนี้', `${code} — เลือกว่าเป็นสินค้าตัวไหน ระบบจะจำไว้ครั้งต่อไป`);
@@ -657,8 +743,12 @@ function unknownCode(code, forLinkOnly){
       <input class="search" id="lk-q" type="search" placeholder="ค้นชื่อหรือรหัสสินค้า">
       <div class="plist" id="lk-list" style="margin-top:10px;max-height:46dvh"></div>
     </div>
-    <div class="ft"><button class="btn" data-close>ยกเลิก</button></div>
+    <div class="ft">${!forLinkOnly && S.cur ? '<button class="btn danger" id="lk-label">นี่คือใบปะหน้า ไม่ใช่สินค้า</button>' : ''}<button class="btn" data-close>ยกเลิก</button></div>
   </div>`);
+  if($('lk-label')) $('lk-label').addEventListener('click', () => {
+    closeModal();
+    setFlash('err', '⛔', 'ยิงผิดใบ', `${code} ไม่ใช่ใบปะหน้าของกล่องนี้ (${S.cur.tracking}) — ยิงใบเดิมเพื่อปิดกล่อง`);
+  });
   const draw = () => {
     $('lk-list').innerHTML = productRows(filterProducts($('lk-q').value, ''), 'link');
   };
@@ -672,7 +762,7 @@ function unknownCode(code, forLinkOnly){
       if(!r.ok) toast('จำบาร์โค้ดไม่สำเร็จ — ' + r.error, 4000);
       else toast(`จำแล้ว: ${code} = ${S.bySku[sku.toUpperCase()].name}`);
     }).catch(() => toast('จำบาร์โค้ดไม่สำเร็จ ลองใหม่ภายหลัง', 4000));
-    if(!forLinkOnly && S.cur) addItem(sku.toUpperCase(), 1, true); else render();
+    if(!forLinkOnly && S.cur) addProduct(sku.toUpperCase(), true); else render();
   });
   draw();
   setTimeout(() => { if($('lk-q')) $('lk-q').focus(); }, 30);
@@ -784,12 +874,13 @@ function renderPack(){
       <div class="small" style="margin-top:4px">ยิงบาร์โค้ดบนใบปะหน้าเพื่อเริ่มแพ็คกล่องใหม่</div>
       <div class="small" style="margin-top:14px">วันนี้แพ็คแล้ว <b class="mono">${todays.length}</b> กล่อง${S.who ? ` · ของ${esc(S.who)} <b class="mono">${mine.length}</b> กล่อง` : ''}</div></div>`;
   }else{
-    const rows = S.cur.order.slice().reverse().map(sku => {
-      const p = S.bySku[sku], l = left(sku);
-      return `<li class="line${sku === S.lastHit ? ' flashrow' : ''}">
-        <div><div class="nm">${esc(p.name)}</div>
-        <div class="meta"><span class="mono">${esc(p.sku)}</span> · คงเหลือหลังแพ็ค <span class="mono${l < 0 ? ' low' : ''}">${fmt(l)}</span>${l < 0 ? ' <span class="low">สต๊อกไม่พอ</span>' : ''}</div></div>
-        <div class="qty"><button data-dec="${esc(sku)}" aria-label="ลด">−</button><b>${S.cur.items[sku]}</b><button data-inc="${esc(sku)}" aria-label="เพิ่ม">+</button></div>
+    const rows = S.cur.order.slice().reverse().map(k => {
+      const [sku, lot] = bkSplit(k);
+      const p = S.bySku[sku], l = left(k), many = lotsOf(sku).length > 1 || lot;
+      return `<li class="line${k === S.lastHit ? ' flashrow' : ''}">
+        <div><div class="nm">${esc(p.name)}${many ? ' ' + lotTag(lot) : ''}</div>
+        <div class="meta"><span class="mono">${esc(p.sku)}</span> · คงเหลือหลังแพ็ค${many ? ' (' + esc(lotName(lot)) + ')' : ''} <span class="mono${l < 0 ? ' low' : ''}">${fmt(l)}</span>${l < 0 ? ' <span class="low">สต๊อกไม่พอ</span>' : ''}</div></div>
+        <div class="qty"><button data-dec="${esc(k)}" aria-label="ลด">−</button><b>${S.cur.items[k]}</b><button data-inc="${esc(k)}" aria-label="เพิ่ม">+</button></div>
       </li>`;
     }).join('');
     bc.innerHTML = `<div class="boxhead">
@@ -820,7 +911,7 @@ function productRows(list, mode){
   if(!list.length) return '<div class="empty small">ไม่พบสินค้า</div>';
   const coded = hasBarcode();
   return list.slice(0, 200).map(p => {
-    const l = left(p.sku.toUpperCase());
+    const l = leftSku(p.sku.toUpperCase());
     return `<button class="pitem" data-sku="${esc(p.sku)}">
       <span class="nm"><b>${esc(p.name)}${coded[p.sku.toUpperCase()] ? '<span class="barcode-tag">มีบาร์โค้ด</span>' : ''}</b><span class="sku">${esc(p.sku)} · ${esc(p.brand)}</span></span>
       <span class="st${l <= 0 ? ' low' : ''}">เหลือ ${fmt(l)}</span>
@@ -867,7 +958,7 @@ function renderToday(){
     list.map(p => `<tr class="${p.status === 'ยกเลิก' ? 'void' : ''}">
       <td class="mono">${esc(p.closedAt.slice(11, 16))}</td>
       <td class="mono">${esc(p.tracking)}</td>
-      <td class="small">${p.items.map(it => esc(((S.bySku[it.sku.toUpperCase()] || {}).name || it.sku)) + ' ×' + it.qty).join('<br>')}</td>
+      <td class="small">${p.items.map(it => esc(((S.bySku[it.sku.toUpperCase()] || {}).name || it.sku)) + (it.lot || lotsOf(it.sku.toUpperCase()).length > 1 ? ' ' + lotTag(it.lot) : '') + ' ×' + it.qty).join('<br>')}</td>
       <td>${esc(p.by)}</td>
       <td class="keep">${videoCell(p)}</td>
       <td class="keep r">${p.status === 'ยกเลิก' ? `<span class="pill crit">ยกเลิกโดย ${esc(p.voidBy)}</span>` : `<button class="btn danger" data-void="${esc(p.id)}" style="padding:4px 10px;font-size:13px">ยกเลิก</button>`}</td>
@@ -968,7 +1059,7 @@ $('psearch').addEventListener('keydown', e => { if(e.key === 'Escape'){ $('psear
 $('plist').addEventListener('click', e => {
   const b = e.target.closest('[data-sku]'); if(!b) return;
   if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน', 'ต้องเปิดกล่องด้วยใบปะหน้าก่อนจึงจะใส่สินค้าได้'); beep.err(); return; }
-  addItem(b.dataset.sku.toUpperCase(), 1, false);
+  addProduct(b.dataset.sku.toUpperCase(), false);
 });
 
 $('tdate').addEventListener('change', renderToday);
@@ -984,7 +1075,7 @@ $('tbox').addEventListener('click', e => {
       call('apiVoidPack', p.id, S.who).then(r => {
         if(!r.ok){ toast(r.error, 4000); return; }
         p.status = 'ยกเลิก'; p.voidBy = S.who;
-        p.items.forEach(it => { const x = S.bySku[it.sku.toUpperCase()]; if(x) x.qty += it.qty; });
+        p.items.forEach(it => stockAdd(it, 1));
         toast('ยกเลิกกล่องแล้ว สต๊อกคืนเรียบร้อย'); render();
       }).catch(err => toast('ยกเลิกไม่สำเร็จ — ' + ((err && err.message) || ''), 4000));
     }, 'ไม่ยกเลิก', true);
@@ -1261,8 +1352,8 @@ $('viddev').addEventListener('change', e => {
   load().then(() => {
     if(S.cur){
       // ตัดสินค้าที่ถูกลบออกจากระบบไปแล้ว กันกล่องค้างพัง
-      S.cur.order = S.cur.order.filter(s => S.bySku[s]);
-      Object.keys(S.cur.items).forEach(s => { if(!S.bySku[s]) delete S.cur.items[s]; });
+      S.cur.order = S.cur.order.filter(k => S.bySku[bkSplit(k)[0]]);
+      Object.keys(S.cur.items).forEach(k => { if(!S.bySku[bkSplit(k)[0]]) delete S.cur.items[k]; });
       if(VID.stream) vidStart(S.cur.tracking);
       setFlash('warn', '📦', 'มีกล่องที่แพ็คค้างไว้', `${S.cur.tracking} — แพ็คต่อได้เลย หรือกด "ยกเลิกกล่องนี้"`);
       render();
@@ -1281,7 +1372,9 @@ function demoApi(fn, a){
       ['CAL-001','CalCopa แคลเซียม','CalCopa',120],['MED-001','Mediral เจล','Mediral',25],['GIF-001','ถุงผ้าของแถม','อุปกรณ์/ของแถม',200]
     ];
     window._demo = {
-      products: P.map((p, i) => ({ seq: i + 1, sku: p[0], name: p[1], brand: p[2], unit: 'ชิ้น', qty: p[3] })),
+      products: P.map((p, i) => ({ seq: i + 1, sku: p[0], name: p[1], brand: p[2], unit: 'ชิ้น', qty: p[3],
+        lots: i === 0 ? [{ lot: '2510A', mfg: '2026-10-01', exp: '2028-10-01', qty: 30 }, { lot: '', mfg: '2026-03-01', exp: '2027-03-01', qty: p[3] - 30 }]
+                      : [{ lot: '', mfg: '', exp: '', qty: p[3] }] })),
       barcodes: { '8851234567893': 'RLK-001' },
       packs: [{ id: 'pk1', tracking: 'TH0123456789A', status: 'ปิดกล่อง', items: [{ sku: 'RLK-001', qty: 2 }, { sku: 'GIF-001', qty: 1 }], pieces: 3, by: 'แป้ง', closedAt: new Date().toISOString().slice(0, 10) + ' 09:12:00', voidBy: '' }],
       people: ['แป้ง', 'โอ้', 'มนต์']
