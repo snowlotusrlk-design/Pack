@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 html,body{margin:0}
 [hidden]{display:none!important}
@@ -192,6 +193,32 @@ button,input,select{font:inherit;color:inherit}
 .upq{font-size:12.5px;color:var(--ink-2)}
 .side{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);min-width:0}
 
+/* ── ออเดอร์ ── */
+.ordhead{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line-2);font-size:13px;color:var(--ink-2)}
+.ordhead b{color:var(--ink)}
+.notebar{margin:12px 16px 0;padding:12px 14px;border-radius:10px;background:var(--warn-soft);border:1.5px solid var(--warn-line);color:var(--warn);font-weight:600;font-size:17px;font-family:"IBM Plex Sans Thai",sans-serif}
+.notebar small{display:block;font-weight:400;font-size:12.5px;opacity:.85}
+.freetag,.difftag,.srctag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;margin-left:6px;vertical-align:2px;font-weight:600;font-family:"IBM Plex Sans Thai",sans-serif}
+.freetag{background:var(--ok-soft);color:var(--ok)}
+.difftag{background:var(--warn-soft);color:var(--warn)}
+.srctag{background:var(--accent-soft);color:var(--accent)}
+.line.missing{opacity:.6}
+.line.missing .nm{text-decoration:line-through}
+.drop{display:flex;flex-direction:column;align-items:center;gap:4px;padding:28px 16px;border:2px dashed var(--accent-line);border-radius:12px;background:var(--surface-2);cursor:pointer;text-align:center}
+.drop.over{background:var(--accent-soft);border-color:var(--accent)}
+.drop .big{font-size:36px;line-height:1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px;margin:12px 0}
+.kv b{font-family:"IBM Plex Mono",monospace}
+.mprow{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--surface-2)}
+.mprow .mptop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mprow select{flex:1;min-width:180px;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);max-width:100%}
+.mpchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.mpchip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 6px 3px 10px;font-size:13px}
+.mpchip button{border:0;background:var(--surface-3);border-radius:50%;width:20px;height:20px;cursor:pointer;line-height:1}
+.chq{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line-2)}
+.chq .nm{flex:1;min-width:0}
+.chsum{font-family:"IBM Plex Mono",monospace;font-size:18px;font-weight:600}
+
 /* ── สรุปวันนี้ ── */
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:12px;margin-bottom:16px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 15px;box-shadow:var(--shadow)}
@@ -254,6 +281,7 @@ tr.void td.keep{text-decoration:none}
     <div class="brand"><b>แพ็คสินค้า</b><span>ยิงใบปะหน้า · ยิงสินค้า · ปิดกล่อง</span></div>
     <nav class="tabs" id="tabs">
       <button data-tab="pack" aria-current="page">แพ็ค</button>
+      <button data-tab="orders">นำเข้าออเดอร์</button>
       <button data-tab="today">สรุปที่แพ็ค</button>
       <button data-tab="codes">บาร์โค้ดสินค้า</button>
     </nav>
@@ -273,9 +301,9 @@ tr.void td.keep{text-decoration:none}
       <div>
         <div class="card"><div class="bd">
           <div class="steps" id="steps">
-            <div class="step" data-s="1"><i>1</i>ยิงใบปะหน้า</div>
-            <div class="step" data-s="2"><i>2</i>ยิงสินค้าลงกล่อง</div>
-            <div class="step" data-s="3"><i>3</i>ยิงใบปะหน้าซ้ำ = ปิดกล่อง</div>
+            <div class="step" data-s="1"><i>1</i>ยิงใบปะหน้า (สินค้าขึ้นเอง)</div>
+            <div class="step" data-s="2"><i>2</i>หยิบของตามรายการ</div>
+            <div class="step" data-s="3"><i>3</i>ยิงใบเดิมซ้ำ = ปิดกล่อง ตัดสต๊อก</div>
           </div>
           <form class="scanbox" id="scanform" autocomplete="off">
             <input id="scan" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ยิงบาร์โค้ดใบปะหน้า">
@@ -306,13 +334,41 @@ tr.void td.keep{text-decoration:none}
         </div>
       </div>
       <div class="card" id="pickcard">
-        <div class="hd"><h2>เพิ่มสินค้าที่ไม่มีบาร์โค้ด</h2><p>แตะเพื่อใส่ลงกล่อง 1 ชิ้น</p></div>
+        <div class="hd"><h2 id="pickh">เพิ่มสินค้าเอง</h2><p id="pickp">แตะเพื่อใส่ลงกล่อง 1 ชิ้น</p></div>
         <div class="bd">
           <input class="search" id="psearch" type="search" placeholder="ค้นชื่อหรือรหัสสินค้า">
           <div class="chips" id="pbrands"></div>
           <div class="plist" id="plist"></div>
         </div>
       </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ นำเข้าออเดอร์ ═══ -->
+  <section id="v-orders" hidden>
+    <div class="two">
+      <div class="card">
+        <div class="hd"><h2>นำเข้าออเดอร์</h2><p>ลากไฟล์ export ของ MyOrder และ BigSeller มาวางพร้อมกันได้หลายไฟล์ — ระบบรวมและตัดซ้ำให้</p></div>
+        <div class="bd">
+          <label class="drop" id="drop"><input type="file" id="ofile" multiple accept=".xlsx,.xls,.csv" hidden>
+            <div class="big">📥</div><b>ลากไฟล์มาวางที่นี่</b><span class="small muted">หรือแตะเพื่อเลือกไฟล์ · MyOrder "Export Data" / BigSeller "ส่งออกตาม SKU ร้านค้า"</span></label>
+          <div id="oresult"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="hd"><h2>ออเดอร์รอแพ็ค</h2><p id="opendsub"></p></div>
+        <div class="bd">
+          <input type="search" id="osearch" class="search" placeholder="ค้นเลขพัสดุ / เลขออเดอร์ / ช่องทาง">
+          <div class="tablewrap" id="olist" style="margin-top:10px;max-height:520px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="hd"><h2>ตารางจับคู่รหัสสินค้า</h2><p>รหัสใน MyOrder / BigSeller → สินค้าในสต๊อก · แก้ได้ตลอด มีผลกับกล่องที่แพ็คหลังจากนี้</p></div>
+      <div class="bd">
+        <input type="search" id="msearch" class="search" placeholder="ค้นรหัสหรือชื่อสินค้า">
+        <div class="tablewrap" id="mlist" style="margin-top:10px;max-height:560px;overflow-y:auto"></div>
       </div>
     </div>
   </section>
@@ -395,7 +451,10 @@ const S = {
   products: [], bySku: {}, barcodes: {}, packs: [], people: [], today: '',
   who: '', tab: 'pack', brand: '', loaded: false,
   cur: null,            // กล่องที่กำลังแพ็ค {tracking, items:{คีย์:qty}, order:[คีย์], openedAt} · คีย์ = SKU หรือ SKU@Lot
-  busy: false, stk: {}, lastHit: ''
+  busy: false, stk: {}, lastHit: '',
+  orders: {},           // เลขพัสดุ → {t, s, o, c, items:[[รหัส, จำนวน, ชื่อ]], n, at} จากไฟล์ที่นำเข้า
+  mappings: {},         // รหัส MO:/BS: → {label, comps}
+  imp: null, filling: false
 };
 
 /* ═══ เครื่องมือ ══════════════════════════════════════ */
@@ -485,7 +544,10 @@ function skuOf(code){
 }
 /* Lot — ของในกล่องเก็บแยกตาม สินค้า×Lot · ไม่มี @ = Lot เดิม (สต๊อกก่อนเริ่มแยก Lot) */
 const bk = (sku, lot) => sku + (lot ? '@' + lot : '');
-const bkSplit = k => { const i = k.indexOf('@'); return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 1)]; };
+// ของแถมใช้คีย์เดียวกันแต่มี + นำหน้า → ตัดสต๊อกเป็นประเภท "แถม" แทน "ขาย"
+const isFree = k => k.charAt(0) === '+';
+const baseKey = k => isFree(k) ? k.slice(1) : k;
+const bkSplit = k => { k = baseKey(k); const i = k.indexOf('@'); return i < 0 ? [k, ''] : [k.slice(0, i), k.slice(i + 1)]; };
 const lotName = lot => lot ? 'Lot ' + lot : 'Lot เดิม';
 const lotTag = lot => `<span class="lottag${lot ? '' : ' old'}">${esc(lotName(lot))}</span>`;
 function lotsOf(sku){ const p = S.bySku[sku]; return (p && p.lots) || []; }
@@ -493,7 +555,7 @@ function lotQty(k){ const [sku, lot] = bkSplit(k); const l = lotsOf(sku).find(x 
 function shortDate(iso){ if(!iso) return ''; const [y, m, d] = iso.split('-'); return d + '/' + m + '/' + String((+y + 543) % 100).padStart(2, '0'); }
 
 function inBox(k){ return S.cur && S.cur.items[k] || 0; }
-function left(k){ return lotQty(k) - inBox(k); }
+function left(k){ const b = baseKey(k); return lotQty(b) - inBox(b) - inBox('+' + b); }
 // คงเหลือรวมของสินค้า หลังหักที่อยู่ในกล่อง (ทุก Lot)
 function leftSku(sku){
   const p = S.bySku[sku]; let n = p ? p.qty : 0;
@@ -510,6 +572,9 @@ function load(quiet){
     S.bySku = {}; S.products.forEach(p => { S.bySku[p.sku.toUpperCase()] = p; });
     S.barcodes = d.barcodes || {};
     S.packs = d.packs || [];
+    S.orders = {};
+    (d.orders || []).forEach(o => { try{ o.items = JSON.parse(o.i || '[]'); }catch(e){ o.items = []; } delete o.i; S.orders[o.t] = o; });
+    S.mappings = d.mappings || {};
     S.people = d.people || [];
     S.today = d.today;
     S.loaded = true;
@@ -549,7 +614,8 @@ function onScan(raw){
       setFlash('err', '❓', 'รหัสสั้นเกินกว่าจะเป็นเลขพัสดุ', `ได้รับ ${code}`);
       return beep.err();
     }
-    const done = closedPack(code);
+    const order = findOrder(code);
+    const done = closedPack(code) || (order && closedPack(order.t));
     if(done){
       setFlash('err', '⛔', 'ใบปะหน้านี้แพ็คไปแล้ว — ห้ามแพ็คซ้ำ',
         `${code} · ปิดกล่องเมื่อ ${thaiTime(done.closedAt)} โดย ${done.by} · ${done.pieces} ชิ้น`);
@@ -558,15 +624,15 @@ function onScan(raw){
     if(looksLikeEan(code)){
       return confirmBox('รหัสนี้หน้าตาเหมือนบาร์โค้ดสินค้า',
         `<p><span class="code">${esc(code)}</span></p><p>ถ้าเป็นบาร์โค้ดบนตัวสินค้า ให้ยิงใบปะหน้าก่อน แล้วค่อยยิงสินค้านี้ — ระบบจะให้ผูกกับสินค้าตอนนั้น</p>`,
-        'เป็นใบปะหน้า เปิดกล่อง', () => openBox(code), 'ไม่ใช่');
+        'เป็นใบปะหน้า เปิดกล่อง', () => startBox(code, order), 'ไม่ใช่');
     }
-    return openBox(code);
+    return startBox(code, order);
   }
 
-  if(code === S.cur.tracking) return closeBox(false);   // ── ขั้น 3: ยิงใบปะหน้าซ้ำ
+  if(code === S.cur.tracking || code === S.cur.scan) return closeBox(false);   // ── ขั้น 3: ยิงใบปะหน้าซ้ำ
 
   const sku = skuOf(code);                         // ── ขั้น 2: ยิงสินค้า
-  if(sku) return addProduct(sku, true);
+  if(sku) return S.cur.src ? checkProduct(sku) : addProduct(sku, true);
 
   if(closedPack(code)){
     setFlash('err', '⛔', 'นี่คือใบปะหน้าของกล่องอื่น', `${code} ปิดกล่องไปแล้ว · กล่องที่เปิดอยู่คือ ${S.cur.tracking}`);
@@ -590,12 +656,235 @@ function closedPack(code){
   return S.packs.find(p => p.tracking === code && p.status === 'ปิดกล่อง');
 }
 
-function openBox(code){
-  S.cur = { tracking: code, items: {}, order: [], openedAt: Date.now() };
+/* หาออเดอร์จากเลขพัสดุ — ตรงตัวก่อน ถ้าไม่เจอลองแบบเลขหนึ่งอยู่ในอีกเลข (บาร์โค้ดบางขนส่งมีตัวเติมหน้า/หลัง) */
+function findOrder(code){
+  if(S.orders[code]) return S.orders[code];
+  if(code.length < 10) return null;
+  const hits = Object.keys(S.orders).filter(t => t.length >= 10 && (t.indexOf(code) >= 0 || code.indexOf(t) >= 0));
+  return hits.length === 1 ? S.orders[hits[0]] : null;
+}
+
+function startBox(code, order){
+  if(order) return openBox(code, order);
+  beep.err();
+  const n = Object.keys(S.orders).length;
+  setFlash('warn', '🔎', 'ไม่พบออเดอร์ของใบปะหน้านี้', n ? `${code} ไม่อยู่ในไฟล์ที่นำเข้า — นำเข้าไฟล์ล่าสุด หรือแพ็คแบบเลือกสินค้าเอง` : 'ยังไม่ได้นำเข้าออเดอร์ — ไปที่แท็บ "นำเข้าออเดอร์"');
+  openModal(`<div class="dlg"><div class="hd"><h3>ไม่พบออเดอร์ของใบปะหน้านี้</h3></div>
+    <div class="bd"><p><span class="code">${esc(code)}</span></p>
+      <p>${n ? `ไม่อยู่ในออเดอร์ที่นำเข้าไว้ (${fmt(n)} ออเดอร์) — อาจเป็นออเดอร์ใหม่ที่ยัง export ไม่ทัน` : 'ยังไม่มีออเดอร์ในระบบ ต้องนำเข้าไฟล์ export ก่อน'}</p>
+      <p class="small muted">แพ็คแบบเลือกสินค้าเอง = เปิดกล่องเปล่า แล้วยิงหรือแตะสินค้าที่ใส่ ระบบตัดสต๊อกตามที่ใส่จริง</p></div>
+    <div class="ft"><button class="btn" data-close>ยกเลิก</button><button class="btn" id="nb-imp">ไปนำเข้าออเดอร์</button><button class="btn pri" id="nb-man">แพ็คแบบเลือกสินค้าเอง</button></div></div>`);
+  $('nb-imp').addEventListener('click', () => { closeModal(); S.tab = 'orders'; render(); });
+  $('nb-man').addEventListener('click', () => { closeModal(); openBox(code, null); });
+}
+
+function openBox(code, order){
+  S.cur = { tracking: order ? order.t : code, scan: code, items: {}, order: [], openedAt: Date.now() };
+  if(order) S.cur.src = { s: order.s, o: order.o, c: order.c, n: order.n };
   saveCur(); beep.open();
-  vidStart(code);
-  setFlash('ok', '📦', 'เปิดกล่องแล้ว — ยิงสินค้าที่จะใส่ได้เลย', code);
+  vidStart(S.cur.tracking);
+  if(!order){
+    setFlash('ok', '📦', 'เปิดกล่องแล้ว — ยิงหรือแตะสินค้าที่จะใส่', code);
+    return render();
+  }
   render();
+  fillFromOrder(order);
+}
+
+/* แปลงรายการในออเดอร์เป็นของในกล่อง — ถามเฉพาะที่จำเป็น: รหัสที่ยังไม่จับคู่ · สินค้าคละ · สินค้าหลาย Lot */
+async function fillFromOrder(order){
+  const cur = S.cur, miss = [];
+  S.filling = true;
+  try{
+    for(const it of order.items){
+      const key = it[0], qty = Number(it[1]) || 1, label = it[2] || '';
+      if(S.cur !== cur) return;
+      let m = mapOf(key);
+      if(!m){
+        m = await mapDialog(key, label);
+        if(S.cur !== cur) return;
+        if(!m){ miss.push(label || key); continue; }
+      }
+      if(m === 'SKIP') continue;
+      for(const comp of m){
+        const total = qty * comp.qty;
+        if(comp.skus.length === 1){
+          if(!await addAuto(comp.skus[0], total, false)) miss.push(S.bySku[comp.skus[0]].name);
+          continue;
+        }
+        const pick = await choiceDialog(comp.skus, total, label);
+        if(S.cur !== cur) return;
+        if(!pick){ miss.push(label || key); continue; }
+        for(const sku of Object.keys(pick)) if(pick[sku] && !await addAuto(sku, pick[sku], false)) miss.push(S.bySku[sku].name);
+      }
+    }
+  }finally{ S.filling = false; }
+  if(S.cur !== cur) return;
+  cur.expect = {};
+  Object.keys(cur.items).forEach(k => { if(!isFree(k)) cur.expect[k] = cur.items[k]; });
+  saveCur();
+  if(miss.length){
+    setFlash('warn', '⚠️', `ยังใส่ไม่ครบ ${miss.length} รายการ`, miss.join(', ') + ' — แตะเพิ่มเองจากรายการด้านขวา');
+    beep.err();
+  }else{
+    setFlash('ok', '📦', `ออเดอร์ ${pieces()} ชิ้น — หยิบของตามรายการ แล้วยิงใบเดิมเพื่อปิดกล่อง`, cur.src.n ? 'มีหมายเหตุจากออเดอร์ — อ่านก่อนแพ็ค' : cur.tracking);
+    beep.ok();
+  }
+  render();
+}
+
+/* ใส่สินค้าตามจำนวน — Lot ที่มีของเหลือ Lot เดียวใส่เลย · หลาย Lot ให้เลือก (resolve false ถ้ากดยกเลิก) */
+function addAuto(sku, n, free){
+  return new Promise(res => {
+    if(!S.bySku[sku]){ res(false); return; }
+    const all = lotsOf(sku), live = all.filter(l => l.qty > 0);
+    const opts = live.length ? live : (all.length ? all : [{ lot: '', qty: 0 }]);
+    const put = lot => { addItem((free ? '+' : '') + bk(sku, lot), n, false, true); res(true); };
+    if(opts.length === 1) return put(opts[0].lot);
+    pickLot(sku, opts, put, () => res(false), n);
+  });
+}
+
+/* ยิงบาร์โค้ดสินค้าระหว่างแพ็คออเดอร์ = ตรวจว่าหยิบถูก ไม่เพิ่มจำนวน */
+function checkProduct(sku){
+  const p = S.bySku[sku];
+  const inOrder = Object.keys(S.cur.items).some(k => !isFree(k) && bkSplit(k)[0] === sku);
+  if(inOrder){ setFlash('ok', '✓', `${p.name} ตรงกับออเดอร์`, 'หยิบถูกแล้ว'); beep.ok(); }
+  else{ setFlash('err', '⛔', `${p.name} ไม่อยู่ในออเดอร์นี้`, 'ถ้าจะใส่เป็นของแถม แตะจากรายการ "เพิ่มของแถม" ด้านขวา'); beep.err(); }
+}
+
+/* ── ตารางจับคู่ ── comps = [{skus:[SKU…], qty}] · skus มากกว่า 1 = คละ ให้คนแพ็คเลือก */
+function parseComps(t){
+  t = String(t || '').trim();
+  if(!t) return null;
+  if(t.toUpperCase() === 'SKIP') return 'SKIP';
+  const out = [];
+  t.split(',').forEach(part => {
+    const [a, q] = part.split('×');
+    const skus = String(a || '').split('|').map(x => x.trim().toUpperCase()).filter(x => S.bySku[x]);
+    if(skus.length) out.push({ skus: skus, qty: Math.max(1, Math.floor(Number(q) || 1)) });
+  });
+  return out.length ? out : null;
+}
+function compsText(m){ return m === 'SKIP' ? 'SKIP' : m.map(c => c.skus.map(x => S.bySku[x].sku).join('|') + '×' + c.qty).join(', '); }
+function mapOf(key){ const m = S.mappings[key]; return m ? parseComps(m.comps) : null; }
+function compsHtml(m){
+  if(m === 'SKIP') return '<span class="muted">ไม่ตัดสต๊อก</span>';
+  return m.map(c => c.skus.length === 1 ? `${esc(S.bySku[c.skus[0]].name)} <b class="mono">×${c.qty}</b>`
+    : `คละ (${c.skus.map(x => esc(S.bySku[x].name)).join(' / ')}) <b class="mono">×${c.qty}</b>`).join('<br>');
+}
+
+function productOptions(){
+  const groups = {};
+  S.products.forEach(p => { (groups[p.brand || 'อื่นๆ'] = groups[p.brand || 'อื่นๆ'] || []).push(p); });
+  return '<option value="">+ เลือกสินค้า…</option>' + Object.keys(groups).map(g =>
+    `<optgroup label="${esc(g)}">${groups[g].map(p => `<option value="${esc(p.sku.toUpperCase())}">${esc(p.name)} · ${esc(p.sku)}</option>`).join('')}</optgroup>`).join('');
+}
+
+/* หน้าต่างจับคู่รหัส → resolve comps / 'SKIP' / null (ปิดไปเฉยๆ) และบันทึกขึ้นระบบให้เลย */
+function mapDialog(key, label){
+  return new Promise(res => {
+    let done = false;
+    const old = mapOf(key);
+    const rows = old && old !== 'SKIP' ? old.map(c => ({ skus: c.skus.slice(), qty: c.qty })) : [{ skus: [], qty: 1 }];
+    const src = key.slice(0, 3) === 'BS:' ? 'BigSeller' : 'MyOrder';
+    openModal(`<div class="dlg" style="width:min(640px,100%)">
+      <div class="hd"><h3>จับคู่สินค้า</h3>
+        <p class="small" style="margin:6px 0 0"><span class="srctag" style="margin-left:0">${src}</span> <b>${esc(label || key.slice(3))}</b><br><span class="mono muted">${esc(key.slice(3))}</span></p></div>
+      <div class="bd">
+        <p class="small muted" style="margin:0 0 10px">สินค้านี้ 1 ชิ้นที่ลูกค้าสั่ง ต้องหยิบอะไรจากสต๊อกบ้าง — เช่น "ครีม 2 กระปุก" ใส่ครีม ×2 · ชุดหลายอย่างกด "+ เพิ่มอีกรายการ" · เลือกหลายตัวในแถวเดียว = คละ ให้คนแพ็คเลือกตอนแพ็ค</p>
+        <div id="mp-rows"></div>
+        <button class="btn" id="mp-add">+ เพิ่มอีกรายการ</button>
+      </div>
+      <div class="ft"><button class="btn" id="mp-skip" title="เช่น สินค้าที่ไม่ได้เก็บในสต๊อกนี้">ไม่ตัดสต๊อก</button><span style="flex:1"></span><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="mp-save">บันทึก</button></div>
+    </div>`, () => { if(!done) res(null); });
+    const opts = productOptions();
+    const draw = () => {
+      $('mp-rows').innerHTML = rows.map((r, i) => `<div class="mprow">
+        <div class="mpchips">${r.skus.map(x => `<span class="mpchip">${esc(S.bySku[x].name)}<button data-rm="${i}:${esc(x)}" aria-label="เอาออก">×</button></span>`).join('') || '<span class="small muted">ยังไม่ได้เลือกสินค้า</span>'}</div>
+        <div class="mptop"><select data-add="${i}">${opts}</select>
+          <label class="small">จำนวน <input class="qtyin" type="number" min="1" inputmode="numeric" data-q="${i}" value="${r.qty}"></label>
+          ${rows.length > 1 ? `<button class="btn danger" data-del="${i}" style="padding:5px 10px">ลบแถว</button>` : ''}</div>
+        ${r.skus.length > 1 ? `<div class="small" style="margin-top:6px;color:var(--accent)">คละ — คนแพ็คเลือกตอนแพ็ค รวม ${r.qty} ชิ้น</div>` : ''}
+      </div>`).join('');
+    };
+    draw();
+    const box = $('mp-rows');
+    box.addEventListener('change', e => {
+      const sel = e.target.closest('[data-add]'); if(!sel || !sel.value) return;
+      const r = rows[+sel.dataset.add];
+      if(r.skus.indexOf(sel.value) < 0) r.skus.push(sel.value);
+      draw();
+    });
+    box.addEventListener('input', e => {            // ไม่ draw() ระหว่างพิมพ์ เคอร์เซอร์จะกระโดด
+      const q = e.target.closest('[data-q]'); if(q) rows[+q.dataset.q].qty = Math.max(1, Math.floor(Number(q.value) || 1));
+    });
+    box.addEventListener('click', e => {
+      const rm = e.target.closest('[data-rm]'), del = e.target.closest('[data-del]');
+      if(rm){ const [i, x] = rm.dataset.rm.split(':'); rows[+i].skus = rows[+i].skus.filter(y => y !== x); draw(); }
+      if(del){ rows.splice(+del.dataset.del, 1); draw(); }
+    });
+    $('mp-add').addEventListener('click', () => { rows.push({ skus: [], qty: 1 }); draw(); });
+    const save = m => {
+      done = true;
+      const text = compsText(m);
+      S.mappings[key] = { label: label, comps: text };
+      closeModal();
+      call('apiSaveMappings', [{ key: key, label: label, comps: text }], S.who)
+        .then(r => { if(!r.ok) toast('บันทึกการจับคู่ไม่สำเร็จ — ' + r.error, 4000); })
+        .catch(() => toast('บันทึกการจับคู่ไม่สำเร็จ ลองใหม่ภายหลัง', 4000));
+      if(S.tab === 'orders') renderOrders();
+      res(m);
+    };
+    $('mp-skip').addEventListener('click', () => save('SKIP'));
+    $('mp-save').addEventListener('click', () => {
+      const m = rows.filter(r => r.skus.length).map(r => ({ skus: r.skus, qty: r.qty }));
+      if(!m.length){ toast('เลือกสินค้าอย่างน้อย 1 ตัว หรือกด "ไม่ตัดสต๊อก"'); return; }
+      save(m);
+    });
+  });
+}
+
+/* สินค้าคละ: ให้คนแพ็คแบ่งจำนวนตามที่หยิบจริง → resolve {SKU: จำนวน} หรือ null */
+function choiceDialog(skus, total, label){
+  return new Promise(res => {
+    let done = false;
+    const cnt = {}; skus.forEach(x => { cnt[x] = 0; });
+    if(skus.length && total) cnt[skus[0]] = 0;
+    beep.open();
+    setFlash('warn', '🎨', `${label || 'สินค้าคละ'} — เลือกสี/สูตรที่หยิบ`, `รวม ${total} ชิ้น · กดเลข 1–${Math.min(9, skus.length)} บนคีย์บอร์ดเพื่อเพิ่มทีละชิ้นได้`);
+    openModal(`<div class="dlg">
+      <div class="hd"><h3>สินค้าคละ — หยิบอะไรบ้าง?</h3><p class="small muted" style="margin:6px 0 0">${esc(label)} · ต้องครบ ${total} ชิ้น</p></div>
+      <div class="bd" id="ch-list"></div>
+      <div class="ft"><span class="chsum" id="ch-sum"></span><span style="flex:1"></span><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="ch-ok">ตกลง</button></div>
+    </div>`, () => { document.removeEventListener('keydown', onKey, true); if(!done) res(null); });
+    const sum = () => skus.reduce((a, x) => a + cnt[x], 0);
+    const draw = () => {
+      $('ch-list').innerHTML = skus.map((x, i) => `<div class="chq"><span class="plus" style="width:26px;height:26px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700">${i < 9 ? i + 1 : '•'}</span>
+        <span class="nm"><b>${esc(S.bySku[x].name)}</b><div class="small muted">เหลือ ${fmt(leftSku(x))}</div></span>
+        <div class="qty"><button data-d="${i}">−</button><b>${cnt[x]}</b><button data-u="${i}">+</button></div></div>`).join('');
+      const n = sum();
+      $('ch-sum').textContent = `${n} / ${total}`;
+      $('ch-sum').style.color = n === total ? 'var(--ok)' : 'var(--warn)';
+      $('ch-ok').disabled = n !== total;
+    };
+    const bump = (i, d) => { const x = skus[i]; cnt[x] = Math.max(0, cnt[x] + d); if(d > 0 && sum() > total) cnt[x]--; draw(); };
+    const ok = () => { if(sum() !== total) return; done = true; closeModal(); res(Object.assign({}, cnt)); };
+    const onKey = e => {
+      if(e.key === 'Escape') return;
+      const n = Number(e.key);
+      if(e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); ok(); return; }
+      if(e.key.length === 1){ e.preventDefault(); e.stopPropagation(); }
+      if(n >= 1 && n <= Math.min(9, skus.length)) bump(n - 1, 1);
+    };
+    document.addEventListener('keydown', onKey, true);
+    $('ch-list').addEventListener('click', e => {
+      const u = e.target.closest('[data-u]'), d = e.target.closest('[data-d]');
+      if(u) bump(+u.dataset.u, 1); if(d) bump(+d.dataset.d, -1);
+    });
+    $('ch-ok').addEventListener('click', ok);
+    draw();
+  });
 }
 
 /* ยิง/แตะสินค้า: มี Lot ที่มีของแค่ Lot เดียว → ใส่กล่องเลย · หลาย Lot → ให้เลือกทุกครั้ง */
@@ -607,12 +896,13 @@ function addProduct(sku, scanned){
   if(opts.length === 1) return addItem(bk(sku, opts[0].lot), 1, scanned);
   pickLot(sku, opts, lot => addItem(bk(sku, lot), 1, scanned));
 }
-function pickLot(sku, opts, onPick){
+function pickLot(sku, opts, onPick, onCancel, qty){
   const p = S.bySku[sku];
+  let chosen = false;
   beep.open();
-  setFlash('warn', '🔖', `${p.name} มีหลาย Lot`, 'เลือก Lot ที่หยิบใส่กล่อง — แตะ หรือกดเลขบนคีย์บอร์ด');
+  setFlash('warn', '🔖', `${p.name}${qty > 1 ? ' × ' + qty : ''} มีหลาย Lot`, 'เลือก Lot ที่หยิบใส่กล่อง — แตะ หรือกดเลขบนคีย์บอร์ด');
   openModal(`<div class="dlg">
-    <div class="hd"><h3>เลือก Lot ของ ${esc(p.name)}</h3>
+    <div class="hd"><h3>เลือก Lot ของ ${esc(p.name)}${qty > 1 ? ' (' + qty + ' ชิ้น)' : ''}</h3>
       <p class="small muted" style="margin:6px 0 0">ดูรหัส Lot / วันหมดอายุบนกล่องสินค้าที่หยิบ</p></div>
     <div class="bd"><div class="lotpick">${opts.map((l, i) => {
       const k = bk(sku, l.lot), lf = left(k);
@@ -621,8 +911,8 @@ function pickLot(sku, opts, onPick){
         <span class="st${lf <= 0 ? ' low' : ''}">เหลือ ${fmt(lf)}</span></button>`;
     }).join('')}</div></div>
     <div class="ft"><button class="btn" data-close>ยกเลิก</button></div>
-  </div>`, () => document.removeEventListener('keydown', onKey, true));
-  const choose = lot => { clearTimeout(t); closeModal(); onPick(lot); };
+  </div>`, () => { document.removeEventListener('keydown', onKey, true); if(!chosen && onCancel) onCancel(); });
+  const choose = lot => { clearTimeout(t); chosen = true; closeModal(); onPick(lot); };
   // เครื่องยิงพิมพ์ตัวเลขรัวๆ — ถ้าคีย์มาติดกันเร็วกว่าคนกด แปลว่าเป็นการยิงบาร์โค้ด ไม่ใช่การเลือก Lot
   let t = 0, burst = false, last = 0;
   const onKey = e => {
@@ -646,7 +936,7 @@ function pickLot(sku, opts, onPick){
   });
 }
 
-function addItem(k, n, scanned){
+function addItem(k, n, scanned, silent){
   if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน'); return beep.err(); }
   const [sku, lot] = bkSplit(k);
   const p = S.bySku[sku];
@@ -657,6 +947,7 @@ function addItem(k, n, scanned){
     S.cur.items[k] = q;
   }
   saveCur();
+  if(n > 0 && silent){ S.lastHit = k; render(); return; }
   if(n > 0){
     S.lastHit = k;
     const l = left(k);
@@ -665,7 +956,7 @@ function addItem(k, n, scanned){
       setFlash('warn', '⚠️', `${p.name}${many ? ' · ' + lotName(lot) : ''} × ${q}`, `สต๊อก${many ? ' ' + lotName(lot) : ''} ในระบบไม่พอ (เหลือ ${fmt(lotQty(k))}) — ยังแพ็คได้ แต่ควรแจ้งคนนับสต๊อก`);
       beep.err();
     }else{
-      setFlash('ok', scanned ? '✓' : '＋', `${p.name}${many ? ' · ' + lotName(lot) : ''} × ${q}`, `ในกล่อง ${pieces()} ชิ้น · คงเหลือหลังแพ็ค ${fmt(l)}`);
+      setFlash('ok', scanned ? '✓' : '＋', `${isFree(k) ? 'แถม: ' : ''}${p.name}${many ? ' · ' + lotName(lot) : ''} × ${q}`, `ในกล่อง ${pieces()} ชิ้น · คงเหลือหลังแพ็ค ${fmt(l)}`);
       beep.ok();
     }
   }
@@ -674,6 +965,7 @@ function addItem(k, n, scanned){
 
 function closeBox(fromButton){
   if(!S.cur) return;
+  if(S.filling){ setFlash('warn', '⏳', 'ยังดึงรายการจากออเดอร์ไม่เสร็จ', 'ตอบหน้าต่างที่เปิดอยู่ให้ครบก่อน'); return beep.err(); }
   const n = pieces();
   if(!n){
     setFlash('err', '📭', 'กล่องยังว่าง ปิดไม่ได้', 'ยิงสินค้าลงกล่องก่อน หรือกด "ยกเลิกกล่องนี้" ถ้าเปิดผิดใบ');
@@ -681,10 +973,10 @@ function closeBox(fromButton){
   }
   const go = () => {
     const cur = S.cur;
-    const items = cur.order.map(k => { const [sku, lot] = bkSplit(k); return { sku: S.bySku[sku].sku, lot: lot, qty: cur.items[k] }; });
+    const items = cur.order.map(k => { const [sku, lot] = bkSplit(k); return { sku: S.bySku[sku].sku, lot: lot, qty: cur.items[k], free: isFree(k) }; });
     S.busy = true; render();
     setFlash('info', '⏳', 'กำลังปิดกล่องและตัดสต๊อก…', cur.tracking);
-    call('apiClosePack', cur.tracking, items, S.who, '').then(r => {
+    call('apiClosePack', cur.tracking, items, S.who, packNote(cur)).then(r => {
       S.busy = false;
       if(!r.ok){
         if(r.dup && r.pack) S.packs.push(r.pack);
@@ -707,9 +999,20 @@ function closeBox(fromButton){
   if(!fromButton) return go();
   confirmBox('ปิดกล่องและตัดสต๊อก?',
     `<p><span class="code">${esc(S.cur.tracking)}</span> · ${n} ชิ้น</p><ul>` +
-    S.cur.order.map(k => { const [sku, lot] = bkSplit(k); return `<li>${esc(S.bySku[sku].name)} ${lotTag(lot)} × <b>${S.cur.items[k]}</b></li>`; }).join('') +
+    S.cur.order.map(k => { const [sku, lot] = bkSplit(k); return `<li>${isFree(k) ? '<span class="freetag" style="margin:0 4px 0 0">แถม</span>' : ''}${esc(S.bySku[sku].name)} ${lotTag(lot)} × <b>${S.cur.items[k]}</b></li>`; }).join('') +
     `</ul><p class="small muted">ครั้งหน้ายิงใบปะหน้าซ้ำแทนการกดปุ่มได้ เร็วกว่า</p>`,
     'ปิดกล่อง', go);
+}
+
+/* หมายเหตุของกล่อง: ที่มาออเดอร์ + ธงว่าแก้จำนวนจากออเดอร์ (ไว้ตรวจย้อนหลัง) */
+function orderEdited(cur){
+  if(!cur.expect) return false;
+  const a = Object.keys(cur.expect), b = Object.keys(cur.items).filter(k => !isFree(k));
+  return a.length !== b.length || a.some(k => cur.items[k] !== cur.expect[k]);
+}
+function packNote(cur){
+  if(!cur.src) return 'เลือกสินค้าเอง';
+  return cur.src.s + (cur.src.o ? ' #' + cur.src.o : '') + (orderEdited(cur) ? ' · แก้จากออเดอร์' : '');
 }
 
 function cancelBox(){
@@ -849,10 +1152,11 @@ function thaiTime(s){
 
 function render(){
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === S.tab ? 'page' : 'false'));
-  ['pack', 'today', 'codes'].forEach(t => { $('v-' + t).hidden = t !== S.tab; });
+  ['pack', 'orders', 'today', 'codes'].forEach(t => { $('v-' + t).hidden = t !== S.tab; });
   $('who').classList.toggle('need', !S.who);
   if(S.tab === 'pack') renderPack();
   if(S.tab === 'today') renderToday();
+  if(S.tab === 'orders') renderOrders();
   if(S.tab === 'codes') renderCodes();
 }
 
@@ -862,7 +1166,7 @@ function renderPack(){
     const n = +el.dataset.s;
     el.className = 'step' + (n < st ? ' done' : (n === st || (st === 2 && n === 3 && pieces() > 0)) ? ' on' : '');
   });
-  $('scan').placeholder = !S.cur ? 'ยิงบาร์โค้ดใบปะหน้า' : 'ยิงสินค้า · ยิงใบปะหน้าซ้ำเพื่อปิดกล่อง';
+  $('scan').placeholder = !S.cur ? 'ยิงบาร์โค้ดใบปะหน้า' : S.cur.src ? 'ยิงใบปะหน้าเดิมซ้ำเพื่อปิดกล่อง' : 'ยิงสินค้า · ยิงใบปะหน้าซ้ำเพื่อปิดกล่อง';
   $('scan').disabled = S.busy;
 
   const bc = $('boxcard');
@@ -872,22 +1176,36 @@ function renderPack(){
     bc.innerHTML = `<div class="empty"><div class="big">📦</div>
       <div class="disp" style="font-size:18px;color:var(--ink)">ยังไม่ได้เปิดกล่อง</div>
       <div class="small" style="margin-top:4px">ยิงบาร์โค้ดบนใบปะหน้าเพื่อเริ่มแพ็คกล่องใหม่</div>
-      <div class="small" style="margin-top:14px">วันนี้แพ็คแล้ว <b class="mono">${todays.length}</b> กล่อง${S.who ? ` · ของ${esc(S.who)} <b class="mono">${mine.length}</b> กล่อง` : ''}</div></div>`;
+      <div class="small" style="margin-top:14px">วันนี้แพ็คแล้ว <b class="mono">${todays.length}</b> กล่อง${S.who ? ` · ของ${esc(S.who)} <b class="mono">${mine.length}</b> กล่อง` : ''}</div>
+      <div class="small" style="margin-top:4px">${pendingOrders().length ? `ออเดอร์รอแพ็ค <b class="mono">${fmt(pendingOrders().length)}</b> · นำเข้าล่าสุด ${esc(lastImport())}` : '<span style="color:var(--warn)">ยังไม่มีออเดอร์รอแพ็ค — นำเข้าไฟล์ที่แท็บ "นำเข้าออเดอร์"</span>'}</div></div>`;
   }else{
+    const exp = S.cur.expect || {};
+    const missing = Object.keys(exp).filter(k => !S.cur.items[k]).map(k => {
+      const [sku, lot] = bkSplit(k);
+      return `<li class="line missing"><div><div class="nm">${esc(S.bySku[sku].name)} ${lotTag(lot)}</div>
+        <div class="meta">เอาออกจากกล่องแล้ว · ออเดอร์สั่ง ${exp[k]}</div></div>
+        <div class="qty"><button data-inc="${esc(k)}" aria-label="ใส่คืน">+</button></div></li>`;
+    }).join('');
     const rows = S.cur.order.slice().reverse().map(k => {
       const [sku, lot] = bkSplit(k);
       const p = S.bySku[sku], l = left(k), many = lotsOf(sku).length > 1 || lot;
+      const tag = isFree(k) ? '<span class="freetag">แถม</span>'
+        : (S.cur.expect && exp[k] !== S.cur.items[k] ? `<span class="difftag">ออเดอร์ ${exp[k] || 0}</span>` : '');
       return `<li class="line${k === S.lastHit ? ' flashrow' : ''}">
-        <div><div class="nm">${esc(p.name)}${many ? ' ' + lotTag(lot) : ''}</div>
+        <div><div class="nm">${esc(p.name)}${many ? ' ' + lotTag(lot) : ''}${tag}</div>
         <div class="meta"><span class="mono">${esc(p.sku)}</span> · คงเหลือหลังแพ็ค${many ? ' (' + esc(lotName(lot)) + ')' : ''} <span class="mono${l < 0 ? ' low' : ''}">${fmt(l)}</span>${l < 0 ? ' <span class="low">สต๊อกไม่พอ</span>' : ''}</div></div>
         <div class="qty"><button data-dec="${esc(k)}" aria-label="ลด">−</button><b>${S.cur.items[k]}</b><button data-inc="${esc(k)}" aria-label="เพิ่ม">+</button></div>
       </li>`;
     }).join('');
+    const src = S.cur.src;
     bc.innerHTML = `<div class="boxhead">
         <div><div class="lbl">กำลังแพ็คใบปะหน้า</div><div class="trk">${esc(S.cur.tracking)}</div></div>
         <div class="cnt"><div class="lbl">ในกล่อง</div><b>${pieces()}</b> <span class="small muted">ชิ้น</span></div>
       </div>
-      ${rows ? `<ul class="lines">${rows}</ul>` : `<div class="empty"><div class="big">🛒</div>ยิงบาร์โค้ดสินค้า หรือแตะเลือกจากรายการด้านขวา</div>`}
+      ${src ? `<div class="ordhead"><span class="srctag" style="margin-left:0">${esc(src.s)}</span>${src.o ? `<span>ออเดอร์ <b class="mono">${esc(src.o)}</b></span>` : ''}${src.c ? `<span>· ${esc(src.c)}</span>` : ''}</div>`
+        : '<div class="ordhead"><span class="difftag" style="margin-left:0">เลือกสินค้าเอง</span><span>ไม่มีออเดอร์ — ตัดสต๊อกตามที่ใส่จริง</span></div>'}
+      ${src && src.n ? `<div class="notebar"><small>หมายเหตุจากออเดอร์ — อ่านก่อนแพ็ค</small>${esc(src.n)}</div>` : ''}
+      ${rows || missing ? `<ul class="lines">${rows}${missing}</ul>` : `<div class="empty"><div class="big">🛒</div>${S.filling ? 'กำลังดึงรายการจากออเดอร์…' : 'ยิงบาร์โค้ดสินค้า หรือแตะเลือกจากรายการด้านขวา'}</div>`}
       <div class="boxfoot">
         <button class="btn danger" id="cancelbox"${S.busy ? ' disabled' : ''}>ยกเลิกกล่องนี้</button>
         <button class="btn okb big" id="closebox"${S.busy || !pieces() ? ' disabled' : ''}>✓ ปิดกล่อง ตัดสต๊อก</button>
@@ -920,6 +1238,9 @@ function productRows(list, mode){
   }).join('');
 }
 function renderPicker(){
+  const free = S.cur && S.cur.src;
+  $('pickh').textContent = free ? 'เพิ่มของแถม' : 'เพิ่มสินค้าเอง';
+  $('pickp').textContent = free ? 'แตะเพื่อใส่ของแถม 1 ชิ้น — ตัดสต๊อกเป็น "แถม"' : 'แตะเพื่อใส่ลงกล่อง 1 ชิ้น';
   const brands = [];
   S.products.forEach(p => { if(p.brand && brands.indexOf(p.brand) < 0) brands.push(p.brand); });
   $('pbrands').innerHTML = ['', ...brands].map(b =>
@@ -958,11 +1279,210 @@ function renderToday(){
     list.map(p => `<tr class="${p.status === 'ยกเลิก' ? 'void' : ''}">
       <td class="mono">${esc(p.closedAt.slice(11, 16))}</td>
       <td class="mono">${esc(p.tracking)}</td>
-      <td class="small">${p.items.map(it => esc(((S.bySku[it.sku.toUpperCase()] || {}).name || it.sku)) + (it.lot || lotsOf(it.sku.toUpperCase()).length > 1 ? ' ' + lotTag(it.lot) : '') + ' ×' + it.qty).join('<br>')}</td>
+      <td class="small">${p.items.map(it => (it.free ? '<span class="freetag" style="margin:0 4px 0 0">แถม</span>' : '') + esc(((S.bySku[it.sku.toUpperCase()] || {}).name || it.sku)) + (it.lot || lotsOf(it.sku.toUpperCase()).length > 1 ? ' ' + lotTag(it.lot) : '') + ' ×' + it.qty).join('<br>')}</td>
       <td>${esc(p.by)}</td>
       <td class="keep">${videoCell(p)}</td>
       <td class="keep r">${p.status === 'ยกเลิก' ? `<span class="pill crit">ยกเลิกโดย ${esc(p.voidBy)}</span>` : `<button class="btn danger" data-void="${esc(p.id)}" style="padding:4px 10px;font-size:13px">ยกเลิก</button>`}</td>
     </tr>`).join('') + `</tbody></table>` : '<div class="empty small">ไม่มีกล่อง</div>';
+}
+
+/* ═══ นำเข้าออเดอร์ ═════════════════════════════════
+   อ่านไฟล์ในเบราว์เซอร์ (SheetJS) แล้วส่งเฉพาะที่ต้องใช้: เลขพัสดุ · รหัสสินค้า×จำนวน · หมายเหตุ */
+function pendingOrders(){
+  const packed = {};
+  S.packs.forEach(p => { if(p.status === 'ปิดกล่อง') packed[p.tracking] = true; });
+  return Object.values(S.orders).filter(o => !packed[o.t]);
+}
+function lastImport(){
+  let m = '';
+  Object.values(S.orders).forEach(o => { if(o.at > m) m = o.at; });
+  return m ? thaiTime(m) : '—';
+}
+
+function readBook(file){
+  return file.arrayBuffer().then(buf => {
+    const wb = XLSX.read(buf, { type: 'array' });
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+  });
+}
+const cell = v => String(v == null ? '' : v).trim();
+const normTrk = v => cell(v).split('(')[0].replace(/\s+/g, '').toUpperCase();
+
+function parseRows(rows){
+  for(let h = 0; h < Math.min(8, rows.length); h++){
+    const hdr = rows[h].map(cell);
+    const ix = n => hdr.indexOf(n);
+    if(ix('TRACKING NO.') >= 0) return parseMyOrder(rows.slice(h + 1), ix);
+    if(ix('หมายเลขแทรคกิ้ง') >= 0) return parseBigSeller(rows.slice(h + 1), ix);
+  }
+  return null;
+}
+
+/* MyOrder: 1 แถว = 1 ออเดอร์ · รหัส "ML-Cr-01 (2), POW-MC-02 (5)" คู่กับชื่อสินค้าตามลำดับ */
+function parseMyOrder(rows, ix){
+  const cT = ix('TRACKING NO.'), cC = ix('รหัสสินค้า (จำนวนชิ้น)'), cN = ix('สินค้า (จำนวนชิ้น)'), cO = ix('Order No.'),
+        cCh = ix('ช่องทาง/เพจ'), cNote = ix('หมายเหตุ'), cD = ix('วันที่สั่งซื้อ');
+  const out = {}; let noTrk = 0;
+  rows.forEach(r => {
+    if(!cell(r[cO]) && !cell(r[cT])) return;
+    const t = normTrk(r[cT]);
+    if(!t || t === '-'){ noTrk++; return; }
+    const codes = cell(r[cC]).split(/,\s*/).filter(Boolean);
+    const names = cell(r[cN]).split(/\)\s*,\s*/).map((x, i, a) => i < a.length - 1 ? x + ')' : x);
+    const items = codes.map((c, i) => {
+      const m = c.match(/^(.*?)\s*\((\d+)\)\s*$/);
+      const code = m ? m[1].trim() : c.trim(), qty = m ? Number(m[2]) : 1;
+      const name = cell(names[i]).replace(/\s*\(\d+\)\s*$/, '').replace(/\s+/g, ' ');
+      return ['MO:' + (code && code !== '-' ? code : name), qty, name];
+    });
+    let note = cell(r[cNote]); if(note === '-') note = '';
+    out[t] = { tracking: t, source: 'MyOrder', orderNo: cell(r[cO]), channel: cell(r[cCh]), items: items, note: note, orderedAt: cell(r[cD]) };
+  });
+  return { format: 'MyOrder', orders: out, noTrk: noTrk, cancel: 0 };
+}
+
+/* BigSeller (ส่งออกตาม SKU ร้านค้า): 1 แถว = 1 สินค้า · รวมแถวที่เลขพัสดุเดียวกัน · ไม่มี SKU ใช้ชื่อสินค้า/ตัวเลือกเป็นรหัส */
+function parseBigSeller(rows, ix){
+  const cT = ix('หมายเลขแทรคกิ้ง'), cS = ix('SKU'), cN = ix('ชื่อสินค้า'), cV = ix('ชื่อตัวเลือก'), cQ = ix('จำนวน'),
+        cO = ix('หมายเลขคำสั่งซื้อ'), cP = ix('แพลตฟอร์ม'), cShop = ix('ร้านค้า BigSeller'), cSt = ix('สถานะคำสั่งซื้อ'),
+        cNb = ix('หมายเหตุผู้ซื้อ'), cNs = ix('หมายเหตุผู้ขาย'), cD = ix('เวลาสั่งซื้อ');
+  const out = {}; let noTrk = 0, cancel = 0;
+  rows.forEach(r => {
+    if(!cell(r[cO])) return;
+    if(/ยกเลิก/.test(cell(r[cSt]))){ cancel++; return; }
+    const t = normTrk(r[cT]);
+    if(!t || t === '--' || t === '-'){ noTrk++; return; }
+    const sku = cell(r[cS]), name = cell(r[cN]).replace(/\s+/g, ' '), v = cell(r[cV]);
+    const label = name.slice(0, 90) + (v ? ' / ' + v : '');
+    const key = 'BS:' + (sku && sku !== '--' ? sku : name + (v ? ' / ' + v : ''));
+    const o = out[t] = out[t] || { tracking: t, source: 'BigSeller', orderNo: cell(r[cO]),
+      channel: [cell(r[cP]), cell(r[cShop])].filter(Boolean).join(' · '), items: [],
+      note: [cell(r[cNb]), cell(r[cNs])].filter(x => x && x !== '--').join(' · '), orderedAt: cell(r[cD]) };
+    const q = Math.max(1, Math.floor(Number(cell(r[cQ])) || 1));
+    const ex = o.items.find(x => x[0] === key);
+    if(ex) ex[1] += q; else o.items.push([key, q, label]);
+  });
+  return { format: 'BigSeller', orders: out, noTrk: noTrk, cancel: cancel };
+}
+
+function importFiles(files){
+  files = Array.from(files || []).filter(f => /\.(xlsx|xls|csv)$/i.test(f.name));
+  if(!files.length){ toast('เลือกไฟล์ .xlsx / .csv'); return; }
+  if(!window.XLSX){ toast('โหลดตัวอ่าน Excel ไม่สำเร็จ ตรวจอินเทอร์เน็ต'); return; }
+  $('oresult').innerHTML = '<div class="flash info"><span class="ic">⏳</span><div>กำลังอ่านไฟล์…</div></div>';
+  Promise.all(files.map(f => readBook(f).then(rows => ({ f: f, r: parseRows(rows) })).catch(e => ({ f: f, err: e }))))
+    .then(res => {
+      const orders = {}, info = [];
+      res.forEach(x => {
+        if(x.err || !x.r){ info.push({ name: x.f.name, bad: true }); return; }
+        Object.assign(orders, x.r.orders);
+        info.push({ name: x.f.name, format: x.r.format, n: Object.keys(x.r.orders).length, noTrk: x.r.noTrk, cancel: x.r.cancel });
+      });
+      S.imp = { orders: orders, info: info };
+      renderOrders();
+    });
+}
+
+function impStats(){
+  const list = Object.values(S.imp.orders);
+  let fresh = 0, changed = 0;
+  list.forEach(o => {
+    const ex = S.orders[o.tracking];
+    if(!ex) fresh++;
+    else if(JSON.stringify(ex.items) !== JSON.stringify(o.items) || (ex.n || '') !== o.note) changed++;
+  });
+  const unm = {};
+  list.forEach(o => o.items.forEach(it => { if(!mapOf(it[0])) unm[it[0]] = it[2]; }));
+  return { total: list.length, fresh: fresh, changed: changed, unmapped: unm };
+}
+
+function saveImport(){
+  const list = Object.values(S.imp.orders);
+  const st = impStats();
+  const send = list.filter(o => { const ex = S.orders[o.tracking]; return !ex || JSON.stringify(ex.items) !== JSON.stringify(o.items) || (ex.n || '') !== o.note; });
+  if(!send.length){ toast('ไม่มีออเดอร์ใหม่ — ทุกออเดอร์อยู่ในระบบแล้ว'); return; }
+  if(!S.who){ toast('เลือกชื่อที่มุมขวาบนก่อน'); return; }
+  $('imp-save').disabled = true;
+  const chunks = [];
+  for(let i = 0; i < send.length; i += 300) chunks.push(send.slice(i, i + 300));
+  let added = 0, upd = 0, at = '';
+  const next = i => {
+    if(i >= chunks.length){
+      send.forEach(o => { S.orders[o.tracking] = { t: o.tracking, s: o.source, o: o.orderNo, c: o.channel, items: o.items, n: o.note, at: at || S.today }; });
+      S.imp = null;
+      toast(`นำเข้าแล้ว: ใหม่ ${added} · อัปเดต ${upd} ออเดอร์`, 4000);
+      $('oresult').innerHTML = `<div class="flash ok"><span class="ic">✅</span><div>นำเข้าเรียบร้อย<small>ใหม่ ${fmt(added)} · อัปเดต ${fmt(upd)} ออเดอร์${Object.keys(st.unmapped).length ? ` · ยังไม่จับคู่ ${Object.keys(st.unmapped).length} รหัส (ระบบจะถามตอนแพ็ค หรือจับคู่ในตารางด้านล่าง)` : ''}</small></div></div>`;
+      renderOrders(true);
+      return;
+    }
+    $('imp-save').textContent = `กำลังบันทึก ${i + 1}/${chunks.length}…`;
+    call('apiImportOrders', chunks[i], S.who).then(r => {
+      if(!r.ok) throw new Error(r.error);
+      added += r.added; upd += r.updated; at = r.importedAt || at;
+      next(i + 1);
+    }).catch(e => {
+      toast('บันทึกไม่สำเร็จ — ' + ((e && e.message) || ''), 5000);
+      $('imp-save').disabled = false; $('imp-save').textContent = 'ลองบันทึกอีกครั้ง';
+    });
+  };
+  next(0);
+}
+
+async function mapAll(keys){
+  for(const k of keys){
+    if(mapOf(k)) continue;
+    const r = await mapDialog(k, S.imp && Object.values(S.imp.orders).reduce((a, o) => a || (o.items.find(x => x[0] === k) || [])[2], '') || allLabels()[k] || '');
+    if(r === null) break;
+  }
+  renderOrders();
+}
+function allLabels(){
+  const m = {};
+  Object.values(S.orders).forEach(o => o.items.forEach(it => { if(!m[it[0]]) m[it[0]] = it[2]; }));
+  return m;
+}
+
+function renderOrders(keepResult){
+  // ผลการอ่านไฟล์ที่ยังไม่บันทึก
+  if(S.imp){
+    const st = impStats(), unk = Object.keys(st.unmapped);
+    $('oresult').innerHTML = `<div style="margin-top:14px">
+      ${S.imp.info.map(f => f.bad ? `<div class="small" style="color:var(--crit)">✗ ${esc(f.name)} — อ่านไม่ได้ หรือไม่ใช่ไฟล์ MyOrder / BigSeller</div>`
+        : `<div class="small">✓ <b>${esc(f.format)}</b> · ${esc(f.name)} · ${fmt(f.n)} ออเดอร์${f.noTrk ? ` · ข้าม ${f.noTrk} (ยังไม่มีเลขพัสดุ)` : ''}${f.cancel ? ` · ข้าม ${f.cancel} (ยกเลิก)` : ''}</div>`).join('')}
+      <div class="kv"><span>ออเดอร์ทั้งหมด</span><b>${fmt(st.total)}</b><span>ใหม่</span><b>${fmt(st.fresh)}</b><span>มีการแก้ไข</span><b>${fmt(st.changed)}</b><span>มีอยู่แล้ว</span><b>${fmt(st.total - st.fresh - st.changed)}</b></div>
+      ${unk.length ? `<div class="flash warn" style="font-size:15px"><span class="ic">🔗</span><div>รหัสสินค้าที่ยังไม่จับคู่ ${unk.length} รหัส<small>${unk.slice(0, 6).map(k => esc(st.unmapped[k] || k.slice(3))).join(' · ')}${unk.length > 6 ? ' …' : ''}</small></div></div>
+        <button class="btn" id="imp-map" style="margin-top:10px">🔗 จับคู่ทีละรหัส (${unk.length})</button>` : '<div class="small" style="color:var(--ok)">✓ ทุกรหัสสินค้าจับคู่กับสต๊อกแล้ว</div>'}
+      <div class="toolbar" style="margin:14px 0 0"><button class="btn" id="imp-cancel">ยกเลิก</button><button class="btn pri big" id="imp-save" style="flex:1"${st.fresh + st.changed ? '' : ' disabled'}>บันทึกเข้าระบบ ${fmt(st.fresh + st.changed)} ออเดอร์</button></div>
+    </div>`;
+    if($('imp-map')) $('imp-map').addEventListener('click', () => mapAll(unk));
+    $('imp-cancel').addEventListener('click', () => { S.imp = null; $('oresult').innerHTML = ''; });
+    $('imp-save').addEventListener('click', saveImport);
+  }else if(!keepResult && !$('oresult').firstElementChild){
+    $('oresult').innerHTML = '';
+  }
+
+  // ออเดอร์รอแพ็ค
+  const q = $('osearch').value.trim().toUpperCase();
+  const pend = pendingOrders().sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  $('opendsub').textContent = `${fmt(pend.length)} ออเดอร์ · นำเข้าล่าสุด ${lastImport()}`;
+  const shown = pend.filter(o => !q || o.t.indexOf(q) >= 0 || String(o.o).toUpperCase().indexOf(q) >= 0 || String(o.c).toUpperCase().indexOf(q) >= 0).slice(0, 300);
+  $('olist').innerHTML = shown.length ? `<table><thead><tr><th>เลขพัสดุ</th><th>สินค้า</th><th>ช่องทาง</th></tr></thead><tbody>` +
+    shown.map(o => `<tr><td class="mono">${esc(o.t)}<div class="small muted">${esc(o.s)}</div></td>
+      <td class="small">${o.items.map(it => `${mapOf(it[0]) ? '' : '<span class="difftag" style="margin:0 4px 0 0">ยังไม่จับคู่</span>'}${esc(it[2] || it[0].slice(3))} ×${it[1]}`).join('<br>')}${o.n ? `<div style="color:var(--warn)">📝 ${esc(o.n)}</div>` : ''}</td>
+      <td class="small">${esc(o.c)}</td></tr>`).join('') + `</tbody></table>` : '<div class="empty small">ไม่มีออเดอร์รอแพ็ค</div>';
+
+  // ตารางจับคู่: รหัสที่ยังไม่จับคู่ขึ้นก่อน
+  const labels = allLabels();
+  if(S.imp) Object.values(S.imp.orders).forEach(o => o.items.forEach(it => { if(!labels[it[0]]) labels[it[0]] = it[2]; }));
+  Object.keys(S.mappings).forEach(k => { if(labels[k] == null) labels[k] = S.mappings[k].label; });
+  const mq = $('msearch').value.trim().toLowerCase();
+  const keys = Object.keys(labels).filter(k => !mq || k.toLowerCase().indexOf(mq) >= 0 || String(labels[k]).toLowerCase().indexOf(mq) >= 0)
+    .sort((a, b) => (mapOf(a) ? 1 : 0) - (mapOf(b) ? 1 : 0) || a.localeCompare(b));
+  $('mlist').innerHTML = keys.length ? `<table><thead><tr><th>รหัสในระบบขาย</th><th>ตัดสต๊อกเป็น</th><th></th></tr></thead><tbody>` +
+    keys.map(k => { const m = mapOf(k); return `<tr><td><span class="srctag" style="margin-left:0">${k.slice(0, 3) === 'BS:' ? 'BigSeller' : 'MyOrder'}</span> <span class="mono small">${esc(k.slice(3).slice(0, 60))}</span><div class="small muted">${esc(labels[k] || '')}</div></td>
+      <td class="small">${m ? compsHtml(m) : '<span class="difftag" style="margin:0">ยังไม่จับคู่</span>'}</td>
+      <td class="r"><button class="btn" data-map="${esc(k)}" style="padding:4px 10px;font-size:13px">${m ? 'แก้' : 'จับคู่'}</button></td></tr>`; }).join('') +
+    `</tbody></table>` : '<div class="empty small">ยังไม่มีรหัส — นำเข้าไฟล์ออเดอร์ก่อน</div>';
 }
 
 function renderCodes(){
@@ -1059,7 +1579,22 @@ $('psearch').addEventListener('keydown', e => { if(e.key === 'Escape'){ $('psear
 $('plist').addEventListener('click', e => {
   const b = e.target.closest('[data-sku]'); if(!b) return;
   if(!S.cur){ setFlash('err', '🏷️', 'ยิงใบปะหน้าก่อน', 'ต้องเปิดกล่องด้วยใบปะหน้าก่อนจึงจะใส่สินค้าได้'); beep.err(); return; }
-  addProduct(b.dataset.sku.toUpperCase(), false);
+  const sku = b.dataset.sku.toUpperCase();
+  if(S.cur.src) addAuto(sku, 1, true).then(ok => { if(ok){ setFlash('ok', '🎁', `แถม: ${S.bySku[sku].name}`, `ของแถมในกล่อง ${Object.keys(S.cur.items).filter(isFree).reduce((a, k) => a + S.cur.items[k], 0)} ชิ้น`); beep.ok(); } });
+  else addProduct(sku, false);
+});
+
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => importFiles(e.dataTransfer.files));
+$('ofile').addEventListener('change', e => { importFiles(e.target.files); e.target.value = ''; });
+$('osearch').addEventListener('input', () => renderOrders(true));
+$('msearch').addEventListener('input', () => renderOrders(true));
+$('mlist').addEventListener('click', e => {
+  const b = e.target.closest('[data-map]'); if(!b) return;
+  const k = b.dataset.map;
+  mapDialog(k, allLabels()[k] || (S.mappings[k] || {}).label || '');
 });
 
 $('tdate').addEventListener('change', renderToday);
@@ -1377,7 +1912,9 @@ function demoApi(fn, a){
                       : [{ lot: '', mfg: '', exp: '', qty: p[3] }] })),
       barcodes: { '8851234567893': 'RLK-001' },
       packs: [{ id: 'pk1', tracking: 'TH0123456789A', status: 'ปิดกล่อง', items: [{ sku: 'RLK-001', qty: 2 }, { sku: 'GIF-001', qty: 1 }], pieces: 3, by: 'แป้ง', closedAt: new Date().toISOString().slice(0, 10) + ' 09:12:00', voidBy: '' }],
-      people: ['แป้ง', 'โอ้', 'มนต์']
+      people: ['แป้ง', 'โอ้', 'มนต์'],
+      orders: [{ t: 'WA000000001TH', s: 'MyOrder', o: '1793000000001', c: 'มาดามหลุยส์ เพจ', i: JSON.stringify([['MO:ML-Cr-01', 2, 'ครีมบัวหิมะ'], ['MO:Soap-001', 1, 'สบู่ซอง คละสี']]), n: 'แถมเทสเตอร์กันแดด 1 ซอง', at: new Date().toISOString().slice(0, 10) + ' 08:00:00' }],
+      mappings: { 'MO:ML-Cr-01': { label: 'ครีมบัวหิมะ', comps: 'RLK-002×1' }, 'MO:Soap-001': { label: 'สบู่ซอง คละสี', comps: 'RLK-003|GIF-001×3' } }
     };
   }
   const D = window._demo, today = new Date().toISOString().slice(0, 10);
@@ -1386,6 +1923,7 @@ function demoApi(fn, a){
     const pack = { id: 'pk' + Date.now(), tracking: a[0], status: 'ปิดกล่อง', items: a[1], pieces: a[1].reduce((s, i) => s + i.qty, 0), by: a[2], closedAt: today + ' ' + new Date().toTimeString().slice(0, 8), voidBy: '' };
     return { ok: true, pack: pack };
   }
+  if(fn === 'apiImportOrders') return { ok: true, added: a[0].length, updated: 0, importedAt: today + ' 10:00:00' };
   if(fn === 'apiSaveVideo') return { ok: true, url: URL.createObjectURL(new Blob([Uint8Array.from(atob(a[4]), c => c.charCodeAt(0))], { type: a[3] })) };
   return { ok: true };
 }
