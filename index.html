@@ -157,6 +157,7 @@ button,input,select{font:inherit;color:inherit}
 .qty b{min-width:44px;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:24px}
 .boxfoot{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line-2);background:var(--surface-2);border-radius:0 0 12px 12px;flex-wrap:wrap}
 .boxfoot .btn.okb{flex:1}
+@media(max-width:760px){.boxfoot{position:sticky;bottom:0;z-index:5;box-shadow:0 -6px 16px -10px rgba(0,0,0,.25)}}
 
 .search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:15px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
@@ -303,7 +304,7 @@ tr.void td.keep{text-decoration:none}
           <div class="steps" id="steps">
             <div class="step" data-s="1"><i>1</i>ยิงใบปะหน้า (สินค้าขึ้นเอง)</div>
             <div class="step" data-s="2"><i>2</i>หยิบของตามรายการ</div>
-            <div class="step" data-s="3"><i>3</i>ยิงใบเดิมซ้ำ = ปิดกล่อง ตัดสต๊อก</div>
+            <div class="step" data-s="3"><i>3</i>แพ็คเสร็จ กดปิดกล่อง</div>
           </div>
           <form class="scanbox" id="scanform" autocomplete="off">
             <input id="scan" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ยิงบาร์โค้ดใบปะหน้า">
@@ -566,6 +567,7 @@ function pieces(){ return S.cur ? Object.values(S.cur.items).reduce((a, b) => a 
 
 /* ═══ โหลดข้อมูล ══════════════════════════════════════ */
 function load(quiet){
+  S.loadErr = '';
   if(!quiet) setFlash('info', '⏳', 'กำลังโหลดข้อมูลสินค้า…');
   return call('apiPackLoad').then(d => {
     S.products = d.products.sort((a, b) => a.seq - b.seq);
@@ -583,7 +585,8 @@ function load(quiet){
     if(!quiet) setFlash('', '', '');
     render();
   }).catch(e => {
-    setFlash('err', '⚠️', 'โหลดข้อมูลไม่สำเร็จ', (e && e.message) || 'กด ↻ เพื่อลองใหม่');
+    S.loadErr = (e && e.message) || 'เชื่อมต่อไม่ได้';
+    showLoadErr();
   });
 }
 
@@ -591,6 +594,11 @@ function load(quiet){
    คนมาช่วยแพ็คพิมพ์ชื่อเองที่ "อื่นๆ" แล้วเครื่องจำไว้ให้เลือกครั้งหน้า */
 const PACKERS = ['โอ้', 'แป้ง'];
 function extraPackers(){ try{ return JSON.parse(store.get('rlk_pack_extra') || '[]'); }catch(e){ return []; } }
+function showLoadErr(){
+  if(!API_KEY) setFlash('err', '🔑', 'เครื่องนี้ยังไม่มีรหัสเข้าใช้', 'สแกน QR หน้าแพ็คจากหัวหน้า แล้วเปิดใน Safari / Chrome (ไม่ใช่หน้าต่างย่อยของแอปอื่น)');
+  else setFlash('err', '⚠️', 'โหลดข้อมูลไม่สำเร็จ', S.loadErr + ' — ตรวจอินเทอร์เน็ต แล้วกด ↻');
+}
+
 function fillPeople(){
   const sel = $('who');
   const keep = S.who;
@@ -624,7 +632,7 @@ function askOtherName(){
 function onScan(raw){
   const code = fixScan(raw);
   if(!code) return;
-  if(!S.loaded){ setFlash('warn', '⏳', 'รอโหลดข้อมูลสักครู่'); beep.err(); return; }
+  if(!S.loaded){ if(S.loadErr || !API_KEY) showLoadErr(); else setFlash('warn', '⏳', 'รอโหลดข้อมูลสักครู่'); beep.err(); return; }
   if(!S.who){ setFlash('err', '👤', 'เลือกชื่อผู้แพ็คที่มุมขวาบนก่อน'); beep.err(); $('who').focus(); return; }
   if(S.busy) return;
 
@@ -653,7 +661,10 @@ function onScan(raw){
     return startBox(code, order);
   }
 
-  if(code === S.cur.tracking || code === S.cur.scan) return closeBox(false);   // ── ขั้น 3: ยิงใบปะหน้าซ้ำ
+  if(code === S.cur.tracking || code === S.cur.scan){   // ใบเดิม → ไม่ปิดกล่องเอง ให้คนแพ็คกดปุ่มเมื่อแพ็คเสร็จ
+    setFlash('info', '📦', 'กล่องนี้เปิดอยู่แล้ว', 'แพ็คเสร็จแล้วกดปุ่ม "✓ แพ็คเสร็จ ปิดกล่อง"');
+    return;
+  }
 
   const sku = skuOf(code);                         // ── ขั้น 2: ยิงสินค้า
   if(sku) return S.cur.src ? checkProduct(sku) : addProduct(sku, true);
@@ -662,8 +673,8 @@ function onScan(raw){
     setFlash('err', '⛔', 'นี่คือใบปะหน้าของกล่องอื่น', `${code} ปิดกล่องไปแล้ว · กล่องที่เปิดอยู่คือ ${S.cur.tracking}`);
     return beep.err();
   }
-  if(looksLikeTracking(code)){                     // ไม่ถามให้ผูก — กันพนักงานผูกใบปะหน้าเป็นสินค้า
-    setFlash('err', '⛔', 'ยิงผิดใบ — รหัสนี้เป็นใบปะหน้าอีกใบ', `${code} · กล่องที่เปิดอยู่คือ ${S.cur.tracking} — ยิงใบเดิมเพื่อปิดกล่อง หรือกด "ยกเลิกกล่องนี้"`);
+  if(looksLikeTracking(code) || findOrder(code)){   // ไม่ถามให้ผูก — กันพนักงานผูกใบปะหน้าเป็นสินค้า
+    setFlash('err', '⛔', 'ยังไม่ได้ปิดกล่องก่อนหน้า', `กล่อง ${S.cur.tracking} ยังเปิดอยู่ — กด "✓ แพ็คเสร็จ ปิดกล่อง" ก่อน แล้วค่อยยิงใบ ${code}`);
     return beep.err();
   }
   beep.err();
@@ -751,7 +762,7 @@ async function fillFromOrder(order){
     setFlash('warn', '⚠️', `ยังใส่ไม่ครบ ${miss.length} รายการ`, miss.join(', ') + ' — แตะเพิ่มเองจากรายการด้านขวา');
     beep.err();
   }else{
-    setFlash('ok', '📦', `ออเดอร์ ${pieces()} ชิ้น — หยิบของตามรายการ แล้วยิงใบเดิมเพื่อปิดกล่อง`, cur.src.n ? 'มีหมายเหตุจากออเดอร์ — อ่านก่อนแพ็ค' : cur.tracking);
+    setFlash('ok', '📦', `ออเดอร์ ${pieces()} ชิ้น — หยิบของตามรายการ`, cur.src.n ? 'มีหมายเหตุจากออเดอร์ — อ่านก่อนแพ็ค · แพ็คเสร็จกด "ปิดกล่อง"' : 'แพ็คเสร็จแล้วกด "✓ แพ็คเสร็จ ปิดกล่อง"');
     beep.ok();
   }
   render();
@@ -1024,8 +1035,8 @@ function closeBox(fromButton){
   confirmBox('ปิดกล่องและตัดสต๊อก?',
     `<p><span class="code">${esc(S.cur.tracking)}</span> · ${n} ชิ้น</p><ul>` +
     S.cur.order.map(k => { const [sku, lot] = bkSplit(k); return `<li>${isFree(k) ? '<span class="freetag" style="margin:0 4px 0 0">แถม</span>' : ''}${esc(S.bySku[sku].name)} ${lotTag(lot)} × <b>${S.cur.items[k]}</b></li>`; }).join('') +
-    `</ul><p class="small muted">ครั้งหน้ายิงใบปะหน้าซ้ำแทนการกดปุ่มได้ เร็วกว่า</p>`,
-    'ปิดกล่อง', go);
+    `</ul><p class="small muted">ตรวจของในกล่องให้ครบก่อนกดปิด — ปิดแล้วระบบตัดสต๊อกทันที${S.cur.src && S.cur.src.n ? '<br><b style="color:var(--warn)">หมายเหตุ: ' + esc(S.cur.src.n) + '</b>' : ''}</p>`,
+    'ปิดกล่อง ตัดสต๊อก', go);
 }
 
 /* หมายเหตุของกล่อง: ที่มาออเดอร์ + ธงว่าแก้จำนวนจากออเดอร์ (ไว้ตรวจย้อนหลัง) */
@@ -1117,7 +1128,10 @@ function openCamera(){
     const now = Date.now();
     if(text === camLast && now - camLastT < 1800) return;   // กันกล้องอ่านใบเดิมซ้ำรัวๆ
     camLast = text; camLastT = now;
+    const before = S.cur;
     onScan(text);
+    // เปิดกล่องได้แล้ว → ปิดกล้องทันที กันกล้องอ่านใบปะหน้าใบเดิมซ้ำ (ถ้ามีหน้าต่างอื่นเด้งมาแทน กล้องถูกปิดไปแล้ว)
+    if(!before && S.cur && $('cam')){ closeModal(); return; }
     const f = $('flash').firstElementChild;
     if($('camflash') && f) $('camflash').innerHTML = f.outerHTML;
   };
@@ -1143,6 +1157,7 @@ function stopCamera(){
 /* ═══ กล่องลอย ═══════════════════════════════════════ */
 let onModalClose = null;
 function openModal(html, onClose){
+  if(onModalClose){ const f = onModalClose; onModalClose = null; f(); }   // หน้าต่างเดิมถูกแทน เช่น กล้อง → ปิดกล้องให้ด้วย
   $('modal').innerHTML = `<div class="modal">${html}</div>`;
   onModalClose = onClose || null;
   $('modal').querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModal));
@@ -1190,7 +1205,7 @@ function renderPack(){
     const n = +el.dataset.s;
     el.className = 'step' + (n < st ? ' done' : (n === st || (st === 2 && n === 3 && pieces() > 0)) ? ' on' : '');
   });
-  $('scan').placeholder = !S.cur ? 'ยิงบาร์โค้ดใบปะหน้า' : S.cur.src ? 'ยิงใบปะหน้าเดิมซ้ำเพื่อปิดกล่อง' : 'ยิงสินค้า · ยิงใบปะหน้าซ้ำเพื่อปิดกล่อง';
+  $('scan').placeholder = !S.cur ? 'ยิงบาร์โค้ดใบปะหน้า' : S.cur.src ? 'ยิงสินค้าเพื่อตรวจได้ (ไม่บังคับ)' : 'ยิงสินค้าที่ใส่ลงกล่อง';
   $('scan').disabled = S.busy;
 
   const bc = $('boxcard');
@@ -1232,7 +1247,7 @@ function renderPack(){
       ${rows || missing ? `<ul class="lines">${rows}${missing}</ul>` : `<div class="empty"><div class="big">🛒</div>${S.filling ? 'กำลังดึงรายการจากออเดอร์…' : 'ยิงบาร์โค้ดสินค้า หรือแตะเลือกจากรายการด้านขวา'}</div>`}
       <div class="boxfoot">
         <button class="btn danger" id="cancelbox"${S.busy ? ' disabled' : ''}>ยกเลิกกล่องนี้</button>
-        <button class="btn okb big" id="closebox"${S.busy || !pieces() ? ' disabled' : ''}>✓ ปิดกล่อง ตัดสต๊อก</button>
+        <button class="btn okb big" id="closebox"${S.busy || !pieces() ? ' disabled' : ''}>✓ แพ็คเสร็จ ปิดกล่อง</button>
       </div>`;
     S.lastHit = '';
   }
