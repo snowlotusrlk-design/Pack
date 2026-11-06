@@ -587,13 +587,37 @@ function load(quiet){
   });
 }
 
+/* คนแพ็คประจำมีแค่ 2 คน (รายชื่อในแท็บ "ตั้งค่า" เป็นของทั้งระบบสต๊อก จึงไม่ใช้ที่นี่)
+   คนมาช่วยแพ็คพิมพ์ชื่อเองที่ "อื่นๆ" แล้วเครื่องจำไว้ให้เลือกครั้งหน้า */
+const PACKERS = ['โอ้', 'แป้ง'];
+function extraPackers(){ try{ return JSON.parse(store.get('rlk_pack_extra') || '[]'); }catch(e){ return []; } }
 function fillPeople(){
   const sel = $('who');
   const keep = S.who;
+  const names = PACKERS.concat(extraPackers().filter(n => PACKERS.indexOf(n) < 0));
+  if(keep && names.indexOf(keep) < 0) names.push(keep);
   sel.innerHTML = '<option value="">— เลือกชื่อผู้แพ็ค —</option>' +
-    S.people.map(p => `<option${p === keep ? ' selected' : ''}>${esc(p)}</option>`).join('');
-  if(keep && S.people.indexOf(keep) < 0) sel.insertAdjacentHTML('beforeend', `<option selected>${esc(keep)}</option>`);
+    names.map(p => `<option${p === keep ? ' selected' : ''}>${esc(p)}</option>`).join('') +
+    '<option value="__other">อื่นๆ (พิมพ์ชื่อเอง)…</option>';
   sel.classList.toggle('need', !S.who);
+}
+function askOtherName(){
+  openModal(`<div class="dlg"><div class="hd"><h3>ชื่อคนช่วยแพ็ค</h3></div>
+    <div class="bd"><input class="search" id="on-name" maxlength="30" placeholder="พิมพ์ชื่อเล่น" autocomplete="off">
+      <p class="small muted" style="margin:8px 0 0">ชื่อนี้จะติดไปกับทุกกล่องที่แพ็ค และเครื่องนี้จะจำไว้ให้เลือกครั้งหน้า</p></div>
+    <div class="ft"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="on-ok">ใช้ชื่อนี้</button></div></div>`, () => fillPeople());
+  const ok = () => {
+    const n = $('on-name').value.trim().replace(/\s+/g, ' ');
+    if(!n){ $('on-name').focus(); return; }
+    const ex = extraPackers().filter(x => x !== n);
+    if(PACKERS.indexOf(n) < 0) ex.unshift(n);
+    store.set('rlk_pack_extra', JSON.stringify(ex.slice(0, 6)));
+    S.who = n; store.set('rlk_stock_who', n);
+    closeModal(); render(); focusScan();
+  };
+  $('on-ok').addEventListener('click', ok);
+  $('on-name').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); ok(); } });
+  setTimeout(() => $('on-name').focus(), 30);
 }
 
 /* ═══ การยิง ══════════════════════════════════════════ */
@@ -1558,6 +1582,7 @@ $('tabs').addEventListener('click', e => {
   S.tab = b.dataset.tab; render(); focusScan();
 });
 $('who').addEventListener('change', e => {
+  if(e.target.value === '__other'){ e.target.blur(); askOtherName(); return; }
   S.who = e.target.value; store.set('rlk_stock_who', S.who); render(); e.target.blur(); focusScan();
 });
 $('reload').addEventListener('click', () => load());
@@ -1884,6 +1909,7 @@ $('viddev').addEventListener('change', e => {
   if(DEMO) $('demo').hidden = false;
   render();
   vidInit();
+  fillPeople();
   load().then(() => {
     if(S.cur){
       // ตัดสินค้าที่ถูกลบออกจากระบบไปแล้ว กันกล่องค้างพัง
